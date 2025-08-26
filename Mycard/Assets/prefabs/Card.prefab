@@ -661,7 +661,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -2.25, y: 0, z: -2}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6188963006365575118}
@@ -697,14 +697,14 @@ MonoBehaviour:
   inHand: 0
   handPosition: 0
   theCol: {fileID: 0}
+  assignedPlace: {fileID: 0}
+  anim: {fileID: 5027294989139108541}
   whatIsDesktop:
     serializedVersion: 2
     m_Bits: 64
   whatIsPlacement:
     serializedVersion: 2
     m_Bits: 128
-  assignedPlace: {fileID: 0}
-  anim: {fileID: 5027294989139108541}
 --- !u!65 &2183193030056329190
 BoxCollider:
   m_ObjectHideFlags: 0

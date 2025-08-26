@@ -28,6 +28,7 @@ public class UIController : MonoBehaviour
     public GameObject FieldShowButton;
     public GameObject FieldBackButton;
 
+    public GameObject EnemyUI;
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -57,20 +58,20 @@ public class UIController : MonoBehaviour
 
     public void SetPlayerManaText(int manaAmount)
     {
-        playerManaText.text = "Mana : " + manaAmount;
+        playerManaText.text = "" + manaAmount + "/" + BattleController.instance.playermaxMana;
     }
     public void SetEnemyManaText(int manaAmount)
     {
-        enemyManaText.text = "Mana : " + manaAmount;
+        enemyManaText.text = "" + manaAmount;
     }
 
     public void setPlayerHealthText(int healthAmount)
     {
-        playerHealthText.text = "Player HealTh: " + healthAmount;
+        playerHealthText.text = "" + healthAmount;
     }
     public void setEnemyHealthText(int healthAmount)
     {
-        enemyHealthText.text = "Enemy HealTh: " + healthAmount;
+        enemyHealthText.text = "" + healthAmount;
     }
 
     public void ShowManaWarning()
@@ -126,6 +127,7 @@ public class UIController : MonoBehaviour
             CameraController.instance.MoveTo(CameraController.instance.battleTransform);
             FieldShowButton.SetActive(false);
             FieldBackButton.SetActive(true);
+            EnemyUI.SetActive(false);
 
         }
     }
@@ -137,8 +139,14 @@ public class UIController : MonoBehaviour
             CameraController.instance.MoveTo(CameraController.instance.homeTransform);
             FieldBackButton.SetActive(false);
             FieldShowButton.SetActive(true);
-            
+
+            Invoke("EnableEnemyUI", .4f);
         }
+    }
+
+    void EnableEnemyUI()
+    {
+        EnemyUI.SetActive(true);
     }
 
     public void ChAdd()
@@ -157,6 +165,11 @@ public class UIController : MonoBehaviour
         {
             Debug.LogError("캐릭터 ScriptableObject를 찾을 수 없습니다!");
         }
+    }
+    
+    public void Pauseup()
+    {
+        PauseUnPause();
     }
 
     public void MainMenu()

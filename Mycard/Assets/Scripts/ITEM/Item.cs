@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Microsoft.Unity.VisualStudio.Editor;
 using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
 

@@ -270,8 +270,8 @@ public class BattleController : MonoBehaviour
                 }
             }
         }
-
-
+        
+        UIController.instance.EnemyUI.SetActive(false);
         StartCoroutine(ShowResultCo()); //결과 화면 
     }
 
