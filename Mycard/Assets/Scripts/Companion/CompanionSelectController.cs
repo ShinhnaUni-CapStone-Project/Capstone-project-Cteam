@@ -66,7 +66,7 @@ public class CompanionSelectController : MonoBehaviour
         var run = new CurrentRun {
             RunId = runId, ProfileId = "P1", // ProfileId는 나중에 로그인 시스템과 연동
             Act = 1, Floor = 0, NodeIndex = 0,
-            Gold = 99 + _selected.GoldBonus,
+            Gold = 300 + _selected.GoldBonus,
             CurrentHp = 80 + _selected.MaxHpBonus,
             MaxHpBase = 80 + _selected.MaxHpBonus,
             EnergyMax = 3 + _selected.EnergyMaxBonus,

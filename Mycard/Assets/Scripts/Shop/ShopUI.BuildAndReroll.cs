@@ -131,7 +131,7 @@ public partial class ShopUI : MonoBehaviour
         _isRerollCooling = true;
         if (rerollButton) rerollButton.interactable = false;
 
-        Gold -= cost;
+        SpendGold?.Invoke(cost);
         _rerollCount++;
 
         RerollCardSlots(); // 카드 3칸 교체
@@ -157,11 +157,14 @@ public partial class ShopUI : MonoBehaviour
             _dummy[i] = vm;
         }
 
+        OnSessionChanged?.Invoke(); // 상태 변화 감지로 db 저장 할수 있게
+
         ApplyDeals();
         RefreshViews();
         RefreshTopbar();
         _isRerollCooling = true;
         StartCoroutine(RerollCooldown());
+        
     }
 
     // 쿨다운 코루틴

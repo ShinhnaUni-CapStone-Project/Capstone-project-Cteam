@@ -79,6 +79,9 @@ public partial class ShopUI : MonoBehaviour
     {
         int cost = CurrentRerollCost();
         rerollPriceText?.SetText("{0:#,0}", cost);
+
+        // Gold 속성을 통해 현재 골드 값을 가져와 goldText에 표시합니다.
+        goldText?.SetText("{0:#,0}", Gold);
         
         if (rerollButton)
         {
@@ -102,12 +105,16 @@ public partial class ShopUI : MonoBehaviour
         int cost = FinalPrice(vm);
         if (Gold < cost) return;
 
-        Gold -= cost;
+        SpendGold?.Invoke(cost);
 
         vm.soldOut = true;
         _dummy[index] = vm;
 
+        OnSessionChanged?.Invoke();// 변화 감지해서 db저장용
         RefreshViews();
         RefreshTopbar();
+        
     }
+
+
 }

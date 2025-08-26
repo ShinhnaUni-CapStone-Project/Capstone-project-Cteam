@@ -92,6 +92,7 @@ public class ShopSlotView : MonoBehaviour
 
 [System.Serializable]
 public struct ShopSlotVM {
+    public CardScriptableObject cardData;   // 카드 원본(설계도)을 담아둘 공간
     public string title;   // 예: "Strike"
     public string detail;  // 예: "Card" / "Relic" / "Consumable"
     public Sprite icon;    // (선택) 아이콘 없으면 null
