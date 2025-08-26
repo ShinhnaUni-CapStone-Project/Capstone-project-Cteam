@@ -11,6 +11,14 @@ public class MapTraversalController : MonoBehaviour
     Dictionary<(int floor, int index), NodeGoScene> _nodes;
     string _runId;
     CurrentRun _run;
+
+    private ShopOverlayController _shopOverlay; //상점 오버레이 저장
+
+    void Awake()
+    {
+        // 게임 시작 시 상점 오버레이를 한 번만 찾아둡니다.
+        _shopOverlay = FindObjectOfType<ShopOverlayController>();
+    }
     
 
 
@@ -37,46 +45,59 @@ public class MapTraversalController : MonoBehaviour
 
     public void OnNodeClicked(NodeGoScene target)
     {
-        var curKey = (_run.Floor, _run.NodeIndex);
-        if (!_nodes.TryGetValue(curKey, out var curNode)) return;
+        // 1. 현재 노드 정보를 가져옵니다.
+        if (!_nodes.TryGetValue((_run.Floor, _run.NodeIndex), out var curNode)) return;
 
-        // 허용 이동인지 검사: 현재 노드의 자식이어야 함
-        if (curNode.children == null || !curNode.children.Contains(target))
+        // 2. 현재 클릭이 어떤 종류인지 정의합니다.
+        bool isMoveToChild = curNode.children != null && curNode.children.Contains(target);
+        bool isReclickShop = (curNode == target && target.nodeType == NodeType.Shop);
+
+        // 3. 유효하지 않은 클릭은 입구에서 차단합니다 (Guard Clause).
+        if (!isMoveToChild && !isReclickShop)
         {
-            // TODO: 피드백(사운드/툴팁) 원하면 여기서
             return;
         }
 
-        // 위치 갱신
-        _run.Floor = target.floor;
-        _run.NodeIndex = target.index;
-        _run.UpdatedAtUtc = System.DateTime.UtcNow.ToString("o");
+        // --- 여기까지 통과했다면, 클릭은 '유효'한 것으로 확정 ---
 
-        var visited = new MapNodeState
+        // 4. 상태 변경: **실제로 '새로운 노드로 이동'이 발생할 때만** 실행됩니다.
+        if (isMoveToChild)
         {
-            RunId = _run.RunId,
-            Act = _run.Act,
-            Floor = target.floor,
-            NodeIndex = target.index,
-            // 👇 여기! 저장용 enum으로 명시적 캐스트
-            Type = (Game.Save.NodeType) target.nodeType,
-            Visited = true
-        };
+            // 이동하기 전에, 이전에 열었던 상점 정보를 리셋합니다.
+            _shopOverlay?.ResetShopSession();
 
+            // 위치 이동에 따른 모든 상태 변경(DB 저장, 마커 이동 등)을 처리합니다.
+            _run.Floor = target.floor;
+            _run.NodeIndex = target.index;
+            _run.UpdatedAtUtc = System.DateTime.UtcNow.ToString("o");
 
-        DatabaseManager.Instance.SaveCurrentRun(
-            _run,
-            cards: null, relics: null, potions: null,
-            nodes: new List<MapNodeState> { visited },
-            rngStates: null
-        );
+            var visited = new MapNodeState {
+                RunId = _run.RunId, Act = _run.Act,
+                Floor = target.floor, NodeIndex = target.index,
+                Type = (Game.Save.NodeType)target.nodeType, Visited = true
+            };
+            
+            DatabaseManager.Instance.SaveCurrentRun(
+                _run,
+                cards:null, relics:null, potions:null,
+                nodes:new List<MapNodeState>{ visited },
+                rngStates:null
+            );
 
-        // 시각 갱신
-        PlaceMarker(target.floor, target.index);
-        UpdateReachable(target.floor, target.index);
+            PlaceMarker(target.floor, target.index);
+            UpdateReachable(target.floor, target.index);
+        }
 
-        // 실제 행동(씬 진입/패널 오픈 등)
-        target.GoToAssignedScene();
+        // 5. 최종 행동 결정: 모든 검사와 상태 변경이 끝난 후, 딱 한 번만 결정합니다.
+        if (target.nodeType == NodeType.Shop)
+        {
+            // 목표가 상점이면 (새로 이동했든, 다시 클릭했든) 상점 오버레이를 엽니다.
+            _shopOverlay?.OpenForNode(target.floor, target.index);
+        }
+        else if (isMoveToChild) // 상점이 아닌 다른 노드는, '이동'했을 때만 씬을 전환합니다.
+        {
+            target.GoToAssignedScene();
+        }
     }
 
     void PlaceMarker(int floor, int index)
@@ -126,11 +147,30 @@ public class MapTraversalController : MonoBehaviour
     {
         if (_nodes == null) return;
 
-        foreach (var kv in _nodes) kv.Value.SetReachable(false);
-        if (_nodes.TryGetValue((floor, index), out var cur))
+        // 1. 일단 지도 위의 모든 노드를 비활성화합니다.
+        foreach (var node in _nodes.Values)
         {
-            if (cur.children != null)
-                foreach (var child in cur.children) child.SetReachable(true);
+            node.SetReachable(false);
+        }
+
+        // 2. 현재 내가 위치한 노드를 찾습니다.
+        if (_nodes.TryGetValue((floor, index), out var curNode))
+        {
+            // 3. 다음 층으로 갈 수 있는 모든 자식 노드들을 활성화합니다.
+            if (curNode.children != null)
+            {
+                foreach (var child in curNode.children)
+                {
+                    child.SetReachable(true);
+                }
+            }
+
+            // 4. [예외 규칙] 만약 현재 노드가 '상점'이라면, 자기 자신도 활성화합니다.
+            // 이렇게 하면 닫았던 상점 문을 다시 열 수 있습니다.
+            if (curNode.nodeType == NodeType.Shop /* && !curNode.IsCleared */)
+            {
+                curNode.SetReachable(true);
+            }
         }
     }
 }

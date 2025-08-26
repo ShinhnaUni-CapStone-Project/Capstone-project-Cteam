@@ -12,7 +12,6 @@ public class MapGenerator : MonoBehaviour
 {
     private bool _isMapBuilt = false; // 맵 생성 여부
     // 맵 완성 보고를 위한 신호
-    public event System.Action OnMapGenerationComplete;
 
     private int BossLayerIndex => Mathf.Max(0, numberOfLayers - 1); // 보스층은 마지막 층
     private int FinalRestLayerIndex => Mathf.Max(0, numberOfLayers - 2); // 최종 휴식층은 마지막-1 층
