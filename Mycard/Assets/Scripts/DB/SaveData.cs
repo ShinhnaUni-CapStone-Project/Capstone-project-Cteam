@@ -217,6 +217,10 @@ namespace Game.Save
         [PrimaryKey] public string RunId { get; set; }
         public string Json { get; set; }
         public string UpdatedAtUtc { get; set; }
+
+        //내 위치 상점인지 확인용(저장이 잘못해서 유지 되어도 오류 방지)
+        public int Floor { get; set; }
+        public int Index { get; set; }
     }
 
 }

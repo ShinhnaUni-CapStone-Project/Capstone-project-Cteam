@@ -71,11 +71,14 @@ public class MapTraversalController : MonoBehaviour
         {
             Debug.Log("<color=cyan>ACTION >> Moving to a new node. Resetting shop session...</color>", this);
             
-            // 이동하기 전에, 이전에 열었던 상점 정보를 리셋합니다.
+            // 상점 리클릭 아님 상태로 리셋
             _shopOverlay?.ResetShopSession();
             // db 상점 정보도 리셋합니다.
             if (!string.IsNullOrEmpty(_run?.RunId))
             DatabaseManager.Instance.DeleteActiveShopSession(_run.RunId);
+
+            _shopOverlay?.ClearCachedSession(); //진짜 상점 메모리 데이터 리셋
+
 
             // 위치 이동에 따른 모든 상태 변경(DB 저장, 마커 이동 등)을 처리합니다.
             _run.Floor = target.floor;

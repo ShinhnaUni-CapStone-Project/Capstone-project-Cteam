@@ -6,6 +6,12 @@ using TMPro;
 
 public partial class ShopUI : MonoBehaviour
 {
+    // ==========================================================
+    // 1. UI 요소 연결 (View)
+    // - 이 스크립트가 제어해야 할 Unity UI 오브젝트들을 연결하는 역할입니다.
+    // - 응집도가 매우 높으며, 이 파일에 있는 것이 가장 적절합니다.
+    // ==========================================================
+
     [Header("Root & Window")]
     [SerializeField] private CanvasGroup panel;      // ShopUI 루트(CanvasGroup)
     [SerializeField] private RectTransform window;   // 팝업 창(Scale 애니용)
@@ -18,11 +24,18 @@ public partial class ShopUI : MonoBehaviour
 
     [Header("Topbar")]
     [SerializeField] private TMP_Text goldText;   // 상단 골드 표시
-    [SerializeField] private int testGold = 300;  // 테스트용 시작 골드
     [SerializeField] private TMP_Text rerollPriceText; // 리롤 가격
     [SerializeField] private Button rerollButton;      // 리롤 버튼
 
+    // ==========================================================
+    // 2. 상점 규칙 및 데이터 (Model / Business Logic)
+    // - 상점의 '규칙'(리롤 가격, 할인율 등)과 원본 '데이터'(카드, 유물 목록)입니다.
+    // - 이 부분은 나중에 'ShopService'라는 전문가에게 옮기면 더 좋은 기능들입니다.
+    // - 지금은 ShopUI가 '화면 표시'뿐만 아니라 '상점 규칙 계산'까지 책임지고 있어 역할이 너무 많습니다.
+    // ==========================================================
+
     [Header("Reroll Economy")]
+    [SerializeField] private int testGold = 300;  // 테스트용 시작 골드
     [SerializeField] private int baseReroll = 30;      // 기본 리롤 비용
     [SerializeField] private float rerollGrowth = 1.2f;// 리롤시 매번 가격 20% 증가
 
@@ -31,39 +44,9 @@ public partial class ShopUI : MonoBehaviour
     [SerializeField] private int maxDeals = 2;                         // 이번 상점 최대 특가 수
     [SerializeField] private float dealDiscount = 0.20f;               // 20% 할인
 
-    private const string CardsPath = "Cards"; // Assets/Resources/Cards/*.asset
-
     [Header("Card Sources")]
-    [SerializeField] private List<CardScriptableObject> cardPool = new List<CardScriptableObject>();
-    private CardScriptableObject[] _cardSources = new CardScriptableObject[3];
-
-    [Header("Reroll (Cooldown)")]
-    [SerializeField, Tooltip("Seconds to lock reroll button after a reroll")]
-    private float rerollCooldownSec = 0.20f;   // 리롤 쿨타임
-    private bool _isRerollCooling = false;     // 버튼 락 상태
-
-
-    [SerializeField] private bool verboseLogs = false; //디버그 활성화
-
-    // 상점 진입중 확인용 (노드에 있는동안 다시 열수 있게)
-    private bool _sessionInitialized = false;
-
-    // 카드 속성 CardId/Name 양쪽으로 찾기 위한 맵
-    private readonly Dictionary<string, CardScriptableObject> _cardIdMap = new();
-    private readonly Dictionary<string, CardScriptableObject> _cardNameMap = new(System.StringComparer.OrdinalIgnoreCase);
-
-
-    // 내부 상태
-    private readonly List<ShopSlotView> _views = new();
-    private List<ShopSlotVM> _dummy;
-    private Coroutine _animCo;
-    private bool _isOpen = false;
-    public bool IsOpen => _isOpen;
-    private int _rerollCount;
-
-    private const float OpenDur = 0.18f;   // 페이드/스케일 시간
-    private const float CloseDur = 0.16f;
-    private const float ScaleFrom = 0.92f; // 팝업 열릴 때 시작 스케일
+    [SerializeField] private List<CardScriptableObject> cardPool = new List<CardScriptableObject>(); // 카드 데이터 원본 목록
+    private const string CardsPath = "Cards"; // 카드 원본 데이터가 있는 리소스 폴더 경로
 
     // (유물/소모품 풀 – 계속 쓰면 유지)
     private static readonly string[] RelicsPool = {
@@ -72,9 +55,46 @@ public partial class ShopUI : MonoBehaviour
     private static readonly string[] ConsumablesPool = {
         "Block Potion","Strength Potion","Dex Potion","Energy Tonic","Small Potion"
     };
-    // 비카드(문자열) 슬롯 타입 식별용
+
+    // ==========================================================
+    // 3. 내부 상태 관리 (Controller / State)
+    // - 상점이 열려있는 동안의 상태를 저장하고 관리하는 변수들입니다.
+    // - 이 기능들은 'ShopPresenter'나 'ShopOverlayController' 같은 중간 관리자가 가져가면 더 좋습니다.
+    // - 지금은 ShopUI가 화면 표시(View)와 상태 관리(Controller)를 모두 하고 있어 복잡합니다.
+    // ==========================================================
+
+    private CardScriptableObject[] _cardSources = new CardScriptableObject[3]; // 리롤을 위해 현재 카드 3개의 원본을 저장
+    private float rerollCooldownSec = 0.20f;   // 리롤 쿨타임
+    private bool _isRerollCooling = false;     // 버튼 락 상태
+
+    // 카드 속성 CardId/Name 빠르게 찾기 위한 맵
+    private readonly Dictionary<string, CardScriptableObject> _cardIdMap = new();
+    private readonly Dictionary<string, CardScriptableObject> _cardNameMap = new(System.StringComparer.OrdinalIgnoreCase);
+
+    // 식별용 해시셋 (이름으로 유물/소모품인지 빠르게 판단)
     private static readonly HashSet<string> _relicsSet = new HashSet<string>(RelicsPool);
     private static readonly HashSet<string> _consumablesSet = new HashSet<string>(ConsumablesPool);
+
+
+    [SerializeField] private bool verboseLogs = false; //디버그 활성화
+
+    // 상점 진입중 확인용 (노드에 있는동안 다시 열수 있게)
+    private bool _sessionInitialized = false;
+
+    private readonly List<ShopSlotView> _views = new(); // 현재 상점에 진열된 아이템 목록의 '실제 UI 오브젝트' (View)
+    private List<ShopSlotVM> _dummy; // 현재 상점에 진열된 아이템 목록의 '데이터' (ViewModel)
+
+    private Coroutine _animCo; // UI 애니메이션 코루틴
+    private bool _isOpen = false; // 상점이 현재 열려있는지 여부
+    public bool IsOpen => _isOpen; // 외부에서 _isOpen 상태를 읽을 수만 있도록 공개
+    private int _rerollCount; // 현재 리롤 횟수
+
+    private const float OpenDur = 0.18f;   // 페이드/스케일 시간
+    private const float CloseDur = 0.16f;
+    private const float ScaleFrom = 0.92f; // 팝업 열릴 때 시작 스케일
+
+    
+    
 
     #region --- 데이터 포장/개봉 (DTO) ---
 
@@ -102,6 +122,8 @@ public partial class ShopUI : MonoBehaviour
     // '개봉 기술' (택배 상자를 열어서 -> ShopUI의 상태를 복원)
     public void ImportSession(ShopSessionDTO dto)
     {
+        if (_cardIdMap.Count == 0) LoadAllCardData();
+        
         // [CCTV] 함수가 어떤 데이터로 시작하는지 확인
         Debug.Log($"<color=purple>[CCTV] ImportSession 시작. 현재 '카드 전화번호부'에 등록된 카드 수: {_cardIdMap.Count}개</color>", this);
 

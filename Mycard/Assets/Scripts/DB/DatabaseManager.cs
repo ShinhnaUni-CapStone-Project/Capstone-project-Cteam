@@ -337,22 +337,23 @@ public sealed class DatabaseManager
     */
 
     // --- 활성 상점 세션: RunId 1-row 저장소 ---
-    public void UpsertActiveShopSession(string runId, string json)
+    public void UpsertActiveShopSession(string runId, string json, int floor, int index)
     {
         if (string.IsNullOrEmpty(runId)) return;
         var row = new ActiveShopSession {
             RunId = runId,
             Json = json ?? "",
-            UpdatedAtUtc = DateTime.UtcNow.ToString("o")
+            UpdatedAtUtc = DateTime.UtcNow.ToString("o"),
+            Floor = floor,
+            Index = index
         };
         _conn.InsertOrReplace(row);
     }
 
-    public string LoadActiveShopSessionJson(string runId)
+    public ActiveShopSession LoadActiveShopSession(string runId)
     {
         if (string.IsNullOrEmpty(runId)) return null;
-        var row = _conn.Find<ActiveShopSession>(runId);
-        return row?.Json;
+        return _conn.Find<ActiveShopSession>(runId);
     }
 
     public void DeleteActiveShopSession(string runId)
