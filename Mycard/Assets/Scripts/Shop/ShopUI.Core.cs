@@ -47,7 +47,11 @@ public partial class ShopUI : MonoBehaviour
 
     // 상점 진입중 확인용 (노드에 있는동안 다시 열수 있게)
     private bool _sessionInitialized = false;
-    
+
+    // 카드 속성 CardId/Name 양쪽으로 찾기 위한 맵
+    private readonly Dictionary<string, CardScriptableObject> _cardIdMap = new();
+    private readonly Dictionary<string, CardScriptableObject> _cardNameMap = new(System.StringComparer.OrdinalIgnoreCase);
+
 
     // 내부 상태
     private readonly List<ShopSlotView> _views = new();
@@ -68,8 +72,11 @@ public partial class ShopUI : MonoBehaviour
     private static readonly string[] ConsumablesPool = {
         "Block Potion","Strength Potion","Dex Potion","Energy Tonic","Small Potion"
     };
+    // 비카드(문자열) 슬롯 타입 식별용
+    private static readonly HashSet<string> _relicsSet = new HashSet<string>(RelicsPool);
+    private static readonly HashSet<string> _consumablesSet = new HashSet<string>(ConsumablesPool);
 
-        #region --- 데이터 포장/개봉 (DTO) ---
+    #region --- 데이터 포장/개봉 (DTO) ---
 
 
 
@@ -95,9 +102,83 @@ public partial class ShopUI : MonoBehaviour
     // '개봉 기술' (택배 상자를 열어서 -> ShopUI의 상태를 복원)
     public void ImportSession(ShopSessionDTO dto)
     {
+        // [CCTV] 함수가 어떤 데이터로 시작하는지 확인
+        Debug.Log($"<color=purple>[CCTV] ImportSession 시작. 현재 '카드 전화번호부'에 등록된 카드 수: {_cardIdMap.Count}개</color>", this);
+
+
+        if (dto == null || dto.slots == null || dto.slots.Length == 0)
+        {
+            // [CCTV] 유효하지 않은 데이터로 리셋되는지 확인
+            Debug.LogWarning($"<color=yellow>[Import] DTO 데이터가 비어있어 상점을 리셋합니다.</color>", this);
+            ResetSession();
+            return;
+        }
+
         _rerollCount = dto.rerollCount;
-        // ... (이 부분은 Phase 6에서 DB 데이터를 실제로 불러올 때 최종 완성됩니다) ...
+        _dummy = new List<ShopSlotVM>(dto.slots.Length);
+
+        // [CCTV] 복원할 아이템 개수와 리롤 횟수 확인
+        Debug.Log($"<color=lightblue>[Import] 복원 시작: 총 {dto.slots.Length}개의 아이템, 리롤 횟수 {_rerollCount}</color>", this);
+
+        // 리롤 로직에 필요한 카드 소스 데이터를 초기화합니다.
+        for (int i = 0; i < _cardSources.Length; i++) _cardSources[i] = null;
+
+        for (int i = 0; i < dto.slots.Length; i++)
+        {
+            var slotData = dto.slots[i];
+            ShopSlotVM vm;
+
+            // [CCTV] 각 슬롯의 원본 데이터 확인
+            Debug.Log($" - 슬롯 #{i} 복원 시도: itemId='{slotData.itemId}', soldOut={slotData.soldOut}");
+
+            // 1. cardId로 카드를 먼저 찾아봅니다.
+            if (!string.IsNullOrEmpty(slotData.itemId) && _cardIdMap.TryGetValue(slotData.itemId, out var soById))
+            {
+                vm = ToVM(soById);
+
+                // [CCTV] 카드 복원 성공 여부 확인
+                Debug.Log($"<color=green>   -> [ID로] 카드 복원 성공: {soById.cardName}</color>");
+            
+                // 첫 3칸은 카드 슬롯이므로, 리롤을 위해 원본 데이터를 저장해둡니다.
+                if (i < 3) _cardSources[i] = soById;
+            }
+            // 2. 실패 시 CardName으로 폴백
+            else if (!string.IsNullOrEmpty(slotData.itemId) && _cardNameMap.TryGetValue(slotData.itemId, out var soByName))
+            {
+                vm = ToVM(soByName);
+                if (i < 3) _cardSources[i] = soByName;
+
+                Debug.Log($"<color=green>   -> [이름으로] 카드 복원 성공: {soByName.cardName}</color>");
+            }
+            else
+            {
+                // 3) 카드가 아니면 문자열 아이템(유물/소모품)으로 복원
+                string id = slotData.itemId ?? "";
+                string detail = _consumablesSet.Contains(id) ? "Consumable"
+                            : _relicsSet.Contains(id)      ? "Relic"
+                            : "Relic"; // 모르면 유물로 취급
+
+                vm = new ShopSlotVM
+                {
+                    title   = id,
+                    detail  = detail,
+                    price   = BasePriceOf(detail, id),
+                };
+                // [CCTV] 유물/소모품 복원 확인
+                Debug.Log($"<color=cyan>   -> 유물/소모품으로 복원: {slotData.itemId} (타입: {detail})</color>");
+            }
+
+            vm.soldOut = slotData.soldOut;
+            _dummy.Add(vm);
+        }
+
+        // [CCTV] 최종 복원된 아이템 수 확인
+        Debug.Log($"<color=lightblue>[Import] 최종 복원된 아이템 수: {_dummy.Count}개</color>", this);
+
+
         _sessionInitialized = true;
+        RebuildGrid();
+        RefreshTopbar();
     }
 
     #endregion

@@ -33,6 +33,13 @@ public partial class ShopUI : MonoBehaviour
             BuildDummySlots();
             BuildCardSlotsInitial();
             ApplyDeals();
+
+            var displayItems = new System.Text.StringBuilder();
+            foreach (var vm in _dummy)
+            {
+                displayItems.Append(vm.title + ", ");
+            }
+            Debug.Log($"<color=cyan>[CCTV] 화면 표시용 아이템 목록:</color> {displayItems}", this);
         }
 
 

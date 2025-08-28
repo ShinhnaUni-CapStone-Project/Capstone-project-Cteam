@@ -87,6 +87,7 @@ public sealed class DatabaseManager
         _conn.CreateTable<PotionInPossession>();
         _conn.CreateTable<MapNodeState>();
         _conn.CreateTable<RngState>();
+        _conn.CreateTable<ActiveShopSession>(); //db 상점
     }
 
     /// <summary>
@@ -283,6 +284,85 @@ public sealed class DatabaseManager
         public List<MapNodeState> Nodes;
         public List<RngState> RngStates;
     }
+
+    // ==========================================================
+    // 4) 부분 업데이트 (안전한 저장)
+    // ==========================================================
+
+    /// <summary>
+    /// 특정 런(Run)의 골드만 안전하게 업데이트합니다.
+    /// DB에서 최신 데이터를 읽어와 골드만 수정 후 저장하므로 다른 값을 덮어쓸 위험이 없습니다.
+    /// </summary>
+    public void UpdateRunGold(string runId, int newGold)
+    {
+        var run = _conn.Find<CurrentRun>(runId);
+        if (run == null) return;
+
+        run.Gold = Mathf.Max(0, newGold);
+        run.UpdatedAtUtc = DateTime.UtcNow.ToString("o");
+
+        _conn.Update(run);
+        Debug.Log($"[DB] 골드 업데이트 완료: {run.Gold}");
+    }
+
+    /// <summary>
+    /// 상점 세션 정보만 안전하게 추가하거나 갱신(Upsert)합니다.
+    /// 기존 노드 정보를 보존하며 상점 데이터만 덮어씁니다.
+    /// </summary>
+    /*
+    public void UpsertShopSession(string runId, int act, int floor, int index, string shopJson)
+    {
+        var existing = _conn.Table<MapNodeState>().FirstOrDefault(n =>
+            n.RunId == runId && n.Act == act && n.Floor == floor && n.NodeIndex == index);
+
+        if (existing == null)
+        {
+            _conn.Insert(new MapNodeState {
+                RunId = runId,
+                Act = act,
+                Floor = floor,
+                NodeIndex = index,
+                Type = Game.Save.NodeType.Shop,
+                Visited = true, // 최초 저장 시 방문 처리
+                ShopInventoryJson = shopJson
+            });
+        }
+        else
+        {
+            existing.ShopInventoryJson = shopJson;
+            _conn.Update(existing);
+        }
+        Debug.Log($"[DB] 상점 세션 저장 완료: ({floor}, {index})");
+    }
+    */
+
+    // --- 활성 상점 세션: RunId 1-row 저장소 ---
+    public void UpsertActiveShopSession(string runId, string json)
+    {
+        if (string.IsNullOrEmpty(runId)) return;
+        var row = new ActiveShopSession {
+            RunId = runId,
+            Json = json ?? "",
+            UpdatedAtUtc = DateTime.UtcNow.ToString("o")
+        };
+        _conn.InsertOrReplace(row);
+    }
+
+    public string LoadActiveShopSessionJson(string runId)
+    {
+        if (string.IsNullOrEmpty(runId)) return null;
+        var row = _conn.Find<ActiveShopSession>(runId);
+        return row?.Json;
+    }
+
+    public void DeleteActiveShopSession(string runId)
+    {
+        if (string.IsNullOrEmpty(runId)) return;
+        _conn.Table<ActiveShopSession>().Delete(x => x.RunId == runId);
+    }
+
+
+    
 
     public void Close()
     {

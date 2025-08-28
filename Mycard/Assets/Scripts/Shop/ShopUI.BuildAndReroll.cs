@@ -8,6 +8,7 @@ public partial class ShopUI : MonoBehaviour
     {
         if (cardPool == null) cardPool = new List<CardScriptableObject>();
 
+        //카드 로드해서 정보 가져옴
         var loadedCards = Resources.LoadAll<CardScriptableObject>(CardsPath);
         if (loadedCards != null && loadedCards.Length > 0)
         {
@@ -19,10 +20,40 @@ public partial class ShopUI : MonoBehaviour
         VLog($"[ShopUI] cardPool merged count = {cardPool.Count}");
         if (cardPool.Count == 0)
             Debug.LogWarning($"[ShopUI] No cards found in inspector or Resources/{CardsPath}");
+
+        // 카드 ID 매핑 구축 (여기가 빠지면 ImportSession에서 카드 3칸이 제대로 복원 안 됨)
+        _cardIdMap.Clear();
+        _cardNameMap.Clear();
+        foreach (var card in cardPool)
+        {
+            if (card == null) continue;
+
+            // Id 맵
+            if (!string.IsNullOrEmpty(card.cardId))
+            {
+                if (_cardIdMap.ContainsKey(card.cardId))
+                    Debug.LogWarning($"[ShopUI] Duplicate CardId: {card.cardId}");
+                else
+                    _cardIdMap[card.cardId] = card;
+            }
+
+            // Name 맵 (표시용 이름)
+            if (!string.IsNullOrEmpty(card.cardName))
+            {
+                if (_cardNameMap.ContainsKey(card.cardName))
+                    Debug.LogWarning($"[ShopUI] Duplicate CardName: {card.cardName}");
+                else
+                    _cardNameMap[card.cardName] = card;
+            }
+        }
+        // [CCTV] 전화번호부가 완성되었는지 확인
+        Debug.Log($"<color=purple>[CCTV] '카드 전화번호부'(_cardIdMap) 생성 완료. 총 {cardPool.Count}개의 카드 중 { _cardIdMap.Count}개가 등록되었습니다.</color>", this);
     }
 
     private void BuildDummySlots()
     {
+        // _dummy는 상점에 진열될 상품 정보를 담는 '진열대' 역할을 합니다.
+        // _dummy 리스트를 6칸짜리 새 리스트로 초기화합니다.
         _dummy = new List<ShopSlotVM>(6)
         {
             new ShopSlotVM{ title="Strike",       detail="Card" },
@@ -33,6 +64,7 @@ public partial class ShopUI : MonoBehaviour
             new ShopSlotVM{ title="Block Potion", detail="Consumable" },
         };
 
+        // 방금 진열한 모든 아이템('마네킹' 포함)을 하나씩 돌면서 가격을 계산하고 설정합니다.
         for (int i = 0; i < _dummy.Count; i++)
         {
             var vm = _dummy[i];
@@ -46,6 +78,7 @@ public partial class ShopUI : MonoBehaviour
         var icon = so.characterSprite != null ? so.characterSprite : so.bgSprite;
         return new ShopSlotVM
         {
+            cardData = so,
             title   = so.cardName,
             detail  = "Card",
             icon    = icon,
@@ -57,16 +90,21 @@ public partial class ShopUI : MonoBehaviour
 
     private void BuildCardSlotsInitial()
     {
+        // (안전장치) 카드 데이터가 담긴 '창고'(cardPool)가 비어있으면, 함수를 즉시 종료합니다.
         if (cardPool == null || cardPool.Count == 0) return;
 
+        // 뽑았던 카드를 다시 뽑지 않기 위한 '제외 목록'
         var exclude = new HashSet<string>();
+
+        // 상점의 첫 3칸(카드 전용 슬롯)에 대해서만 반복 작업을 합니다.
         for (int i = 0; i < 3; i++)
         {
             var pick = DrawUniqueCard(exclude);
             if (pick == null) { _cardSources[i] = null; continue; }
 
-            exclude.Add(pick.cardName);     // 이름 기반(당신 선택 유지)
+            exclude.Add(pick.cardName);     // 이름 기반
             _cardSources[i] = pick;
+            // 진열대(_dummy)의 i번째 칸에 있던 '마네킹'을 방금 뽑은 진짜 카드(pick) 정보로 교체합니다.
             _dummy[i] = ToVM(pick);
         }
     }
