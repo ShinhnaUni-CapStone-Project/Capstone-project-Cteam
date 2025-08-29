@@ -7,7 +7,7 @@ public class CardScriptableObject : ScriptableObject
 {
 
     public string cardName;
-    public string Id; //Id 카드 고유 Id
+    public string CardId; //Id 카드 고유 Id
     public CardType cardType; //추가1
     public DamageType damageType;//추가2
 

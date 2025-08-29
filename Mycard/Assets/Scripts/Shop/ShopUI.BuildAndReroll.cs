@@ -36,12 +36,12 @@ public partial class ShopUI : MonoBehaviour
             if (card == null) continue;
 
             // Id 맵
-            if (!string.IsNullOrEmpty(card.Id))
+            if (!string.IsNullOrEmpty(card.CardId))
             {
-                if (_cardIdMap.ContainsKey(card.Id))
-                    Debug.LogWarning($"[ShopUI] Duplicate CardId: {card.Id}");
+                if (_cardIdMap.ContainsKey(card.CardId))
+                    Debug.LogWarning($"[ShopUI] Duplicate CardId: {card.CardId}");
                 else
-                    _cardIdMap[card.Id] = card;
+                    _cardIdMap[card.CardId] = card;
             }
 
             // Name 맵 (표시용 이름)

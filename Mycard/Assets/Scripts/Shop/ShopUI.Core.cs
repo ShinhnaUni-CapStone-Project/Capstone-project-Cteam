@@ -112,7 +112,7 @@ public partial class ShopUI : MonoBehaviour
         {
             var vm = _dummy[i];
             dto.slots[i] = new SlotDTO {
-                itemId = vm.cardData?.Id ?? vm.title, // 안정적인 Id 사용
+                itemId = vm.cardData?.CardId ?? vm.title, // 안정적인 CardId 사용
                 soldOut = vm.soldOut
             };
         }

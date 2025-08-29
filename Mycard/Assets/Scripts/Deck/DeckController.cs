@@ -276,12 +276,12 @@ public class DeckController : MonoBehaviour
         foreach (var so in deckToUse)
         {
             if (so == null) continue;
-            if (string.IsNullOrEmpty(so.Id))
+            if (string.IsNullOrEmpty(so.CardId))
             {
                 Debug.LogWarning($"[DeckController1] 저장 스킵: Id가 비어있는 카드: {so.name}");
                 continue;
             }
-            data.ids.Add(so.Id);
+            data.ids.Add(so.CardId);
         }
         // file save
         string Decklist = JsonUtility.ToJson(data); //Json직렬화 유저 데이터 저장
@@ -335,12 +335,12 @@ public class DeckController : MonoBehaviour
     private void TryIndex(CardScriptableObject so)
     {
         if (so == null) return;
-        if (string.IsNullOrEmpty(so.Id))
+        if (string.IsNullOrEmpty(so.CardId))
         {
             Debug.LogWarning($"[DeckController] 카드에 Id가 비어있습니다: {so.name}");
             return;
         }
-        dbById[so.Id] = so; // 마지막 등록 우선
+        dbById[so.CardId] = so; // 마지막 등록 우선
     }
 
     private void NotifyChanged() //deck이 변했음을 알리는 코드
