@@ -2,6 +2,14 @@ using UnityEngine;
 
 public partial class ShopUI : MonoBehaviour
 {
+
+    // ==========================================================
+    // 9. 가격 및 특가 계산 (Business Logic)
+    // - 아이템의 기본 가격을 계산하고, 특가를 적용하여 최종 가격을 결정하는 '규칙'입니다.
+    // - 이 기능들은 'ShopService'가 책임져야 할 핵심 경제 로직입니다.
+    // ==========================================================
+
+    // 아이템 종류와 이름에 따라 기본 가격을 계산합니다.
     private int BasePriceOf(string detail, string title)
     {
         int baseVal = detail == "Card" ? 50 :
@@ -11,6 +19,7 @@ public partial class ShopUI : MonoBehaviour
         return baseVal;
     }
 
+    // 특가 여부에 따라 최종 가격을 계산합니다.
     private int FinalPrice(in ShopSlotVM v)
     {
         return v.isDeal
@@ -18,6 +27,7 @@ public partial class ShopUI : MonoBehaviour
             : v.price;
     }
 
+    // 현재 진열된 상품 목록에 랜덤으로 특가를 적용합니다.
     private void ApplyDeals()
     {
         for (int i = 0; i < _dummy.Count; i++)
@@ -46,6 +56,13 @@ public partial class ShopUI : MonoBehaviour
         }
     }
 
+    // ==========================================================
+    // 10. 화면 갱신 (View)
+    // - 결정된 데이터(_dummy)를 바탕으로 실제 UI 요소들을 만들거나 업데이트합니다.
+    // - 이 기능들은 '화면을 그리는' 순수한 View의 역할이므로, ShopUI에 남아있는 것이 적절합니다.
+    // ==========================================================
+
+    // 아이템 목록 전체를 처음부터 다시 그립니다.
     private void RebuildGrid()
     {
         foreach (Transform c in gridParent) Destroy(c.gameObject);
@@ -64,6 +81,7 @@ public partial class ShopUI : MonoBehaviour
         }
     }
 
+    // 이미 생성된 아이템 목록의 내용만 새로고침합니다. (구매 가능 여부 등)
     private void RefreshViews()
     {
         for (int i = 0; i < _dummy.Count && i < _views.Count; i++)
@@ -75,6 +93,7 @@ public partial class ShopUI : MonoBehaviour
         }
     }
 
+    // 상단 골드와 리롤 버튼의 상태를 새로고침합니다.
     private void RefreshTopbar()
     {
         int cost = CurrentRerollCost();
@@ -91,11 +110,20 @@ public partial class ShopUI : MonoBehaviour
         }
     }
 
+    // ==========================================================
+    // 11. 구매/리롤 최종 실행 (Controller)
+    // - 실제 구매, 리롤 비용 계산 등 플레이어의 행동을 최종적으로 처리하는 기능입니다.
+    // - 이 기능들은 현재 View(ShopUI)가 Controller 역할까지 겸하고 있다는 것을 보여줍니다.
+    // - 'ShopPresenter'나 'ShopOverlayController'가 이 책임을 가져가야 합니다.
+    // ==========================================================
+
+    // 현재 리롤 비용을 계산합니다. (규칙이므로 Service로 이동 대상)
     private int CurrentRerollCost()
     {
         return Mathf.RoundToInt(baseReroll * Mathf.Pow(rerollGrowth, _rerollCount));
     }
 
+    // 구매 버튼을 눌렀을 때 실행되는 메인 함수입니다. (골드 확인, 구매 처리 등)
     private void TryBuy(int index)
     {
         if (index < 0 || index >= _dummy.Count) return;
