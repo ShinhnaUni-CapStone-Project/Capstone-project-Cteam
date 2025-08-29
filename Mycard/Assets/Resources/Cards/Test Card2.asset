@@ -12,9 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4d8045bb5fdaf64cb19aaa3581168f0, type: 3}
   m_Name: Test Card2
   m_EditorClassIdentifier: 
-  cardId: test_2
   cardName: carzy
-  Id: 2
+  CardId: 2
   cardType: 0
   damageType: 0
   actionDescription: 
