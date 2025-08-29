@@ -45,6 +45,9 @@ public class MapTraversalController : MonoBehaviour
 
     public void OnNodeClicked(NodeGoScene target)
     {
+        // [디버그 1] 함수가 호출되었는지 확인
+        Debug.Log($"--- OnNodeClicked --- Target: ({target.floor},{target.index})", this);
+
         // 1. 현재 노드 정보를 가져옵니다.
         if (!_nodes.TryGetValue((_run.Floor, _run.NodeIndex), out var curNode)) return;
 
@@ -52,7 +55,10 @@ public class MapTraversalController : MonoBehaviour
         bool isMoveToChild = curNode.children != null && curNode.children.Contains(target);
         bool isReclickShop = (curNode == target && target.nodeType == NodeType.Shop);
 
-        // 3. 유효하지 않은 클릭은 입구에서 차단합니다 (Guard Clause).
+        // [디버그 2] 클릭 종류 판단 결과 출력(이동으로 온건지 다시 누른건지)
+        Debug.Log($"<color=yellow>ANALYSIS >> isMoveToChild: {isMoveToChild}, isReclickShop: {isReclickShop}</color>", this);
+
+        // 3. 유효하지 않은 클릭은 입구에서 차단합니다
         if (!isMoveToChild && !isReclickShop)
         {
             return;
@@ -63,8 +69,16 @@ public class MapTraversalController : MonoBehaviour
         // 4. 상태 변경: **실제로 '새로운 노드로 이동'이 발생할 때만** 실행됩니다.
         if (isMoveToChild)
         {
-            // 이동하기 전에, 이전에 열었던 상점 정보를 리셋합니다.
+            Debug.Log("<color=cyan>ACTION >> Moving to a new node. Resetting shop session...</color>", this);
+            
+            // 상점 리클릭 아님 상태로 리셋
             _shopOverlay?.ResetShopSession();
+            // db 상점 정보도 리셋합니다.
+            if (!string.IsNullOrEmpty(_run?.RunId))
+            DatabaseManager.Instance.DeleteActiveShopSession(_run.RunId);
+
+            _shopOverlay?.ClearCachedSession(); //진짜 상점 메모리 데이터 리셋
+
 
             // 위치 이동에 따른 모든 상태 변경(DB 저장, 마커 이동 등)을 처리합니다.
             _run.Floor = target.floor;

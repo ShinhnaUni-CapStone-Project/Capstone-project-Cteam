@@ -210,4 +210,17 @@ namespace Game.Save
         public long Step { get; set; }               // 몇 번째 랜덤 숫자를 생성할 차례인지.
     }
 
+    //상점 세이브 스컴 방지용 db 저장
+    [Table("ActiveShopSession")]
+    public class ActiveShopSession
+    {
+        [PrimaryKey] public string RunId { get; set; }
+        public string Json { get; set; }
+        public string UpdatedAtUtc { get; set; }
+
+        //내 위치 상점인지 확인용(저장이 잘못해서 유지 되어도 오류 방지)
+        public int Floor { get; set; }
+        public int Index { get; set; }
+    }
+
 }
