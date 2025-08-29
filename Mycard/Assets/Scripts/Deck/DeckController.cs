@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -6,11 +6,11 @@ using UnityEngine;
 
 
 
-//Ãß°¡1
+//ì¶”ê°€1
 [Serializable]
 public class DeckSaveData
 {
-    public List<string> ids = new List<string>(); // deckToUse¸¦ Id ¹è¿­·Î ÀúÀå
+    public List<string> ids = new List<string>(); // deckToUseë¥¼ Id ë°°ì—´ë¡œ ì €ì¥
 }
 
 public class DeckController : MonoBehaviour
@@ -21,31 +21,31 @@ public class DeckController : MonoBehaviour
     {
         instance = this;
     }
-    [Header("ÇöÀç »ç¿ë µ¦(ÀÎ½ºÆåÅÍ/ÄÚµå·Î ÆíÁı)")]
+    [Header("í˜„ì¬ ì‚¬ìš© ë±(ì¸ìŠ¤í™í„°/ì½”ë“œë¡œ í¸ì§‘)")]
     public List<CardScriptableObject> deckToUse = new List<CardScriptableObject>();
     
-    [Header("µå·Î¿ì¿ë È°¼º Ä«µå(¼ÅÇÃ °á°ú)")]
+    [Header("ë“œë¡œìš°ìš© í™œì„± ì¹´ë“œ(ì…”í”Œ ê²°ê³¼)")]
     private List<CardScriptableObject> activeCards = new List<CardScriptableObject>();
     
     
-    [Header("Ä«µå »ı¼º ±ÔÄ¢")]
+    [Header("ì¹´ë“œ ìƒì„± ê·œì¹™")]
     public Card cardToSpawn;
     public int drawCardCost = 2;
     public float waitBetweenDrawingCards = .25f;
-    //public int maxDeckSize = 60;         // ÇÊ¿ä ¾øÀ¸¸é -1
-    //public int maxCopiesPerCard = 4;     // ÇÊ¿ä ¾øÀ¸¸é -1
+    //public int maxDeckSize = 60;         // í•„ìš” ì—†ìœ¼ë©´ -1
+    //public int maxCopiesPerCard = 4;     // í•„ìš” ì—†ìœ¼ë©´ -1
 
-    //Ãß°¡2
-    [Header("Ä«µå DB(ÀüÃ¼ Ä«µå ¸ñ·Ï µî·Ï ±ÇÀå)")]
-    [Tooltip("Id¡æSO ¸ÅÄª¿ë ÀüÃ¼ Ä«µå DB. ºñ¿öµµ µ¿ÀÛÇÏÁö¸¸ ID·Î Ãß°¡ÇÏ·Á¸é ¿©±â¿¡ µî·ÏÇØ¾ß ¾ÈÁ¤ÀûÀÓ.")]
+    //ì¶”ê°€2
+    [Header("ì¹´ë“œ DB(ì „ì²´ ì¹´ë“œ ëª©ë¡ ë“±ë¡ ê¶Œì¥)")]
+    [Tooltip("Idâ†’SO ë§¤ì¹­ìš© ì „ì²´ ì¹´ë“œ DB. ë¹„ì›Œë„ ë™ì‘í•˜ì§€ë§Œ IDë¡œ ì¶”ê°€í•˜ë ¤ë©´ ì—¬ê¸°ì— ë“±ë¡í•´ì•¼ ì•ˆì •ì ì„.")]
     public List<CardScriptableObject> cardDatabase = new List<CardScriptableObject>();
-    // ºü¸¥ Á¶È¸¿ë: Id -> SO
+    // ë¹ ë¥¸ ì¡°íšŒìš©: Id -> SO
     private Dictionary<string, CardScriptableObject> dbById = new Dictionary<string, CardScriptableObject>();
     
-    //Ãß°¡3
-    // µ¦ º¯°æ ÀÌº¥Æ®(UI/ÇÚµå/Ä«¿îÅÍ µî °»½Å ÈÅ)
+    //ì¶”ê°€3
+    // ë± ë³€ê²½ ì´ë²¤íŠ¸(UI/í•¸ë“œ/ì¹´ìš´í„° ë“± ê°±ì‹  í›…)
     public event Action<IReadOnlyList<CardScriptableObject>> OnDeckChanged;
-    //Ãß°¡4
+    //ì¶”ê°€4
     private const string PlayerPrefsKey = "deck_1";
 
     void Start()
@@ -53,31 +53,31 @@ public class DeckController : MonoBehaviour
         BuildIndex();
         SetupDeck();
         NotifyChanged();
-        /* µ¦ ÄÁÆ®·Ñ·¯°¡ ºÒ¸±¶§ ¼¼ÀÌºê µÈ°É È£Ãâ ´Ü ÀÌ ¹æ½ÄÀº ÀÌÀü ¾À¿¡¼­ È£ÃâµÇ°í ±×´ë·Î µé°í°¡´Â amloader°°Àº ¹æ½ÄÀÌ¸é ÇÊ¿ä¾øÀ½
-            bool loaded = LoadDeck(true); // ¿©±â¼­ '·Îµå ½Ãµµ'°¡ ½ÇÁ¦·Î ½ÇÇàµÊ
+        /* ë± ì»¨íŠ¸ë¡¤ëŸ¬ê°€ ë¶ˆë¦´ë•Œ ì„¸ì´ë¸Œ ëœê±¸ í˜¸ì¶œ ë‹¨ ì´ ë°©ì‹ì€ ì´ì „ ì”¬ì—ì„œ í˜¸ì¶œë˜ê³  ê·¸ëŒ€ë¡œ ë“¤ê³ ê°€ëŠ” amloaderê°™ì€ ë°©ì‹ì´ë©´ í•„ìš”ì—†ìŒ
+            bool loaded = LoadDeck(true); // ì—¬ê¸°ì„œ 'ë¡œë“œ ì‹œë„'ê°€ ì‹¤ì œë¡œ ì‹¤í–‰ë¨
 
             if (!loaded) {
-            SetupDeck();     // ÀúÀåº»ÀÌ ¾ø°Å³ª ½ÇÆĞÇÏ¸é
-            NotifyChanged(); // ±âº» ¼ÅÇÃ + UI °»½Å
+            SetupDeck();     // ì €ì¥ë³¸ì´ ì—†ê±°ë‚˜ ì‹¤íŒ¨í•˜ë©´
+            NotifyChanged(); // ê¸°ë³¸ ì…”í”Œ + UI ê°±ì‹ 
             }
-        //À§¿¡¿Í °°Àº ¿¹½Ã        
+        //ìœ„ì—ì™€ ê°™ì€ ì˜ˆì‹œ        
         
-            BuildIndex();                 // Id -> SO ¸ÅÇÎ ¸ÕÀú ±¸Ãà
-            if (!LoadDeck(true))          // ÀúÀåº»ÀÌ ÀÖÀ¸¸é ·Îµå + µå·Î¿ì ´õ¹Ì Àç±¸¼º
+            BuildIndex();                 // Id -> SO ë§¤í•‘ ë¨¼ì € êµ¬ì¶•
+            if (!LoadDeck(true))          // ì €ì¥ë³¸ì´ ìˆìœ¼ë©´ ë¡œë“œ + ë“œë¡œìš° ë”ë¯¸ ì¬êµ¬ì„±
             {
-            SetupDeck();              // ÀúÀåº»ÀÌ ¾øÀ¸¸é ±âÁ¸ ¹æ½ÄÀ¸·Î ¼ÅÇÃ
-            NotifyChanged();          // UI/Ä«¿îÅÍ °»½Å
+            SetupDeck();              // ì €ì¥ë³¸ì´ ì—†ìœ¼ë©´ ê¸°ì¡´ ë°©ì‹ìœ¼ë¡œ ì…”í”Œ
+            NotifyChanged();          // UI/ì¹´ìš´í„° ê°±ì‹ 
             }
         
          
          */
     }
     /*
-     void Awake() ÀÌ·¯¸é ´ÙÀ½¾À¿¡¼­µµ À¯ÁöµÈ´Ù ´Ü ÀÌ°É ¾µ °æ¿ì ´Ù¸¥¾À¿¡¼­ µ¦ÄÁÆ®·Ñ·¯¸¦ ¾ø¾Ö¾ßÇÑ´Ù Áï ÀÌ°É È£ÃâÇÏ´Â °æ¿ì°¡ Ã¹¹øÂ° ¹èÆ²ÀÎ°æ¿ìÀÓ
+     void Awake() ì´ëŸ¬ë©´ ë‹¤ìŒì”¬ì—ì„œë„ ìœ ì§€ëœë‹¤ ë‹¨ ì´ê±¸ ì“¸ ê²½ìš° ë‹¤ë¥¸ì”¬ì—ì„œ ë±ì»¨íŠ¸ë¡¤ëŸ¬ë¥¼ ì—†ì• ì•¼í•œë‹¤ ì¦‰ ì´ê±¸ í˜¸ì¶œí•˜ëŠ” ê²½ìš°ê°€ ì²«ë²ˆì§¸ ë°°í‹€ì¸ê²½ìš°ì„
     {
         if (instance != null && instance != this) { Destroy(gameObject); return; }
         instance = this;
-        DontDestroyOnLoad(gameObject); // ÀÌ ¿ÀºêÁ§Æ®¸¦ ´ÙÀ½ ¾ÀÀ¸·Î ±×´ë·Î °¡Á®°¨
+        DontDestroyOnLoad(gameObject); // ì´ ì˜¤ë¸Œì íŠ¸ë¥¼ ë‹¤ìŒ ì”¬ìœ¼ë¡œ ê·¸ëŒ€ë¡œ ê°€ì ¸ê°
     }
      
      
@@ -94,18 +94,18 @@ public class DeckController : MonoBehaviour
         activeCards.Clear();
 
         List<CardScriptableObject> tempDeck = new List<CardScriptableObject>(); // a = temp temp = b a=b 
-        tempDeck.AddRange(deckToUse); //¸®½ºÆ® ¹è¿­ Ãß°¡
+        tempDeck.AddRange(deckToUse); //ë¦¬ìŠ¤íŠ¸ ë°°ì—´ ì¶”ê°€
 
         int interations = 0;
         while (tempDeck.Count > 0 && interations < 500)
         {
-            int selected = UnityEngine.Random.Range(0, tempDeck.Count); //·£´ı º¯¼ö°¡ system°ú unityengine»çÀÌÀÇ ¸ğÈ£¼º ÀÖ¾î¼­ º¯°æ
+            int selected = UnityEngine.Random.Range(0, tempDeck.Count); //ëœë¤ ë³€ìˆ˜ê°€ systemê³¼ unityengineì‚¬ì´ì˜ ëª¨í˜¸ì„± ìˆì–´ì„œ ë³€ê²½
             activeCards.Add(tempDeck[selected]);
-            tempDeck.RemoveAt(selected); //¼±ÅÃµÇÁö ¾ÊÀº activecard °ªÀ» ÁÙ¿©ÁØ´Ù.
-            interations++; //Áõ°¡
+            tempDeck.RemoveAt(selected); //ì„ íƒë˜ì§€ ì•Šì€ activecard ê°’ì„ ì¤„ì—¬ì¤€ë‹¤.
+            interations++; //ì¦ê°€
         }
     }
-    public void RebuildDrawPile(bool shuffle = true) //Ä«µå Ãß°¡½Ã Àç±¸¼º
+    public void RebuildDrawPile(bool shuffle = true) //ì¹´ë“œ ì¶”ê°€ì‹œ ì¬êµ¬ì„±
     {
         if (shuffle)
         {
@@ -136,7 +136,7 @@ public class DeckController : MonoBehaviour
         AudioManager.instance.PlaySFX(3); //sfx3
     }
 
-    public void DrawCardForMana() //µå·Î¿ì Ä«µåÀÇ ÄÚ½ºÆ® ±âÁ¦
+    public void DrawCardForMana() //ë“œë¡œìš° ì¹´ë“œì˜ ì½”ìŠ¤íŠ¸ ê¸°ì œ
     {
         if (BattleController.instance.playerMana >= drawCardCost)
         {
@@ -166,16 +166,16 @@ public class DeckController : MonoBehaviour
     }
 
     // =========================
-    //   µ¦ Á¶ÀÛ¿ë ½Å±Ô ÄÚµå Ãß°¡
+    //   ë± ì¡°ì‘ìš© ì‹ ê·œ ì½”ë“œ ì¶”ê°€
     // =========================
 
-    // µ¦ ÀĞ±â Àü¿ë ºä
+    // ë± ì½ê¸° ì „ìš© ë·°
     public IReadOnlyList<CardScriptableObject> CurrentDeck => deckToUse;
     public IReadOnlyList<CardScriptableObject> CurrentDrawPile => activeCards;
 
     public bool AddCardToDeck(CardScriptableObject so, int count = 1, bool rebuildDrawPile = true)
     {
-        //°¹¼ö Á¦ÇÑÀÌ³ª º¹»çÁ¦ÇÑÀ» µÑ¶§ »ç¿ëÇÏ½Ã¿À
+        //ê°¯ìˆ˜ ì œí•œì´ë‚˜ ë³µì‚¬ì œí•œì„ ë‘˜ë•Œ ì‚¬ìš©í•˜ì‹œì˜¤
         /*
             if (maxDeckSize > 0 && deckToUse.Count + count > maxDeckSize) return false;
 
@@ -208,12 +208,12 @@ public class DeckController : MonoBehaviour
 
         if (!dbById.TryGetValue(id, out var so))
         {
-            Debug.LogWarning($"[DeckController1] ¾Ë ¼ö ¾ø´Â Ä«µå Id: {id}");
+            Debug.LogWarning($"[DeckController1] ì•Œ ìˆ˜ ì—†ëŠ” ì¹´ë“œ Id: {id}");
             return false;
         }
         return AddCardToDeck(so, count, rebuildDrawpile);
     }
-    //card so ÀÌ¸§À¸·Î »èÁ¦ µÚ¿¡¼­ ºÎÅÍ Á¦°Å
+    //card so ì´ë¦„ìœ¼ë¡œ ì‚­ì œ ë’¤ì—ì„œ ë¶€í„° ì œê±°
     public int RemoveCardFromDeck(CardScriptableObject so, int count = 1, bool rebuildDrawPile = true)
     {
         if (so == null || count <= 0) return 0;
@@ -233,19 +233,19 @@ public class DeckController : MonoBehaviour
         }
         return removed;
     }
-    //ID·Î »èÁ¦
+    //IDë¡œ ì‚­ì œ
     public int RemoveCardFromDeckById(string id, int count = 1, bool rebuildDrawPile = true) 
     {
         if (string.IsNullOrEmpty(id)) return 0;
         if (!dbById.TryGetValue(id, out var so))
         {
-            Debug.LogWarning($"[DeckController1] ¾Ë ¼ö ¾ø´Â Ä«µå Id: {id}");
+            Debug.LogWarning($"[DeckController1] ì•Œ ìˆ˜ ì—†ëŠ” ì¹´ë“œ Id: {id}");
             return 0;
         }
         return RemoveCardFromDeck(so, count, rebuildDrawPile);
     }
 
-    public void ClearDeck(bool rebuildDrawPile = true) //µ¦ ºñ¿ì±â
+    public void ClearDeck(bool rebuildDrawPile = true) //ë± ë¹„ìš°ê¸°
     {
         deckToUse.Clear();
 
@@ -254,7 +254,7 @@ public class DeckController : MonoBehaviour
     }
     public void ShuffleDeckToUse()
     {
-        // µ¦ ÀÚÃ¼¸¦ ¼¯°í ½ÍÀ» ¶§
+        // ë± ìì²´ë¥¼ ì„ê³  ì‹¶ì„ ë•Œ
         System.Random RandomDeck = new System.Random();
         for (int i = deckToUse.Count - 1; i > 0; i--)
         {
@@ -264,7 +264,7 @@ public class DeckController : MonoBehaviour
         NotifyChanged();
         RebuildDrawPile(true);
     }
-    public int CountOfInDeck(CardScriptableObject so) //Ä«µå¼ıÀÚ¸¦ ¼¼±â
+    public int CountOfInDeck(CardScriptableObject so) //ì¹´ë“œìˆ«ìë¥¼ ì„¸ê¸°
     {
         int c = 0;
         foreach (var x in deckToUse) if (x == so) c++;
@@ -272,33 +272,33 @@ public class DeckController : MonoBehaviour
     }
     public void SaveDeck()
     {
-        var data = new DeckSaveData(); //DeckSaveData()·Î Id¹è¿­ ÀúÀå
+        var data = new DeckSaveData(); //DeckSaveData()ë¡œ Idë°°ì—´ ì €ì¥
         foreach (var so in deckToUse)
         {
             if (so == null) continue;
             if (string.IsNullOrEmpty(so.CardId))
             {
-                Debug.LogWarning($"[DeckController1] ÀúÀå ½ºÅµ: Id°¡ ºñ¾îÀÖ´Â Ä«µå: {so.name}");
+                Debug.LogWarning($"[DeckController1] ì €ì¥ ìŠ¤í‚µ: Idê°€ ë¹„ì–´ìˆëŠ” ì¹´ë“œ: {so.name}");
                 continue;
             }
             data.ids.Add(so.CardId);
         }
         // file save
-        string Decklist = JsonUtility.ToJson(data); //JsonÁ÷·ÄÈ­ À¯Àú µ¥ÀÌÅÍ ÀúÀå
+        string Decklist = JsonUtility.ToJson(data); //Jsonì§ë ¬í™” ìœ ì € ë°ì´í„° ì €ì¥
 
-        //File.WriteAllText(Application.dataPath + "/DeckData.json", JsonUtility.ToJson(data)); //ÀÌ ÄÚµå¸¦ ¾²¸é DeckData.jsonÀÌ ÀúÀåµÈ´Ù Application.dataPath´Â ÀÛ¾÷Æú´õ
-        PlayerPrefs.SetString(PlayerPrefsKey, Decklist); //PlayerPrefs´Â °£´ÜÇÑ µ¥ÀÌÅÍ¸¦ ·ÎÄÃ·Î ÀúÀåÇÒ¶§ ¾²ÀÎ´Ù PlayerPrefs¸¦ ¹®ÀÚÇüÅÂ·Î º¯°æ 
-        //49¹ø ÁÙÀÇ deck_1À»  ¶æÇÔ PlayerPrefsÀº <Key Value>·Î µ¥ÀÌÅÍ¸¦ ÀúÀåÇÏ´Â Å¬·¡½ºÀÌ´Ù. Key°ªÀº stringÀÌ¸ç, Key´Â Value¸¦ Ã£±â À§ÇÑ ½Äº°ÀÚ¸¦ ÀÇ¹ÌÇÑ´Ù.
-        PlayerPrefs.Save(); //¼öÁ¤µÈ ¸ğµç preferences¸¦ ÆÄÀÏ¿¡ ÀúÀåÇÑ´Ù.
-        Debug.Log($"[DeckController1] µ¦ ÀúÀå ¿Ï·á. Ä«µå ¼ö: {data.ids.Count}");
+        //File.WriteAllText(Application.dataPath + "/DeckData.json", JsonUtility.ToJson(data)); //ì´ ì½”ë“œë¥¼ ì“°ë©´ DeckData.jsonì´ ì €ì¥ëœë‹¤ Application.dataPathëŠ” ì‘ì—…í´ë”
+        PlayerPrefs.SetString(PlayerPrefsKey, Decklist); //PlayerPrefsëŠ” ê°„ë‹¨í•œ ë°ì´í„°ë¥¼ ë¡œì»¬ë¡œ ì €ì¥í• ë•Œ ì“°ì¸ë‹¤ PlayerPrefsë¥¼ ë¬¸ìí˜•íƒœë¡œ ë³€ê²½ 
+        //49ë²ˆ ì¤„ì˜ deck_1ì„  ëœ»í•¨ PlayerPrefsì€ <Key Value>ë¡œ ë°ì´í„°ë¥¼ ì €ì¥í•˜ëŠ” í´ë˜ìŠ¤ì´ë‹¤. Keyê°’ì€ stringì´ë©°, KeyëŠ” Valueë¥¼ ì°¾ê¸° ìœ„í•œ ì‹ë³„ìë¥¼ ì˜ë¯¸í•œë‹¤.
+        PlayerPrefs.Save(); //ìˆ˜ì •ëœ ëª¨ë“  preferencesë¥¼ íŒŒì¼ì— ì €ì¥í•œë‹¤.
+        Debug.Log($"[DeckController1] ë± ì €ì¥ ì™„ë£Œ. ì¹´ë“œ ìˆ˜: {data.ids.Count}");
     }
     public bool LoadDeck(bool rebuildDrawPile = true)
     {
-        if (!PlayerPrefs.HasKey(PlayerPrefsKey)) return false; //PlayerPrefs°¡ Key°¡ Á¸ÀçÇÏ´ÂÁö È®ÀÎÇÑ´Ù.
+        if (!PlayerPrefs.HasKey(PlayerPrefsKey)) return false; //PlayerPrefsê°€ Keyê°€ ì¡´ì¬í•˜ëŠ”ì§€ í™•ì¸í•œë‹¤.
         // file load 
         string Decklist = PlayerPrefs.GetString(PlayerPrefsKey);
         var data = JsonUtility.FromJson<DeckSaveData>(Decklist);
-        if (data == null || data.ids == null) return false; //µ¥ÀÌÅÍ¿Í µ¥ÀÌÅÍ id°¡ ¾ø´Ù¸é ½ÇÆĞ
+        if (data == null || data.ids == null) return false; //ë°ì´í„°ì™€ ë°ì´í„° idê°€ ì—†ë‹¤ë©´ ì‹¤íŒ¨
 
         deckToUse.Clear();
         foreach (var id in data.ids)
@@ -309,12 +309,12 @@ public class DeckController : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"[DeckController1] ·Îµå ½ÇÆĞ: ¾Ë ¼ö ¾ø´Â Id {id}");
+                Debug.LogWarning($"[DeckController1] ë¡œë“œ ì‹¤íŒ¨: ì•Œ ìˆ˜ ì—†ëŠ” Id {id}");
             }
         }
         NotifyChanged();
         if (rebuildDrawPile) RebuildDrawPile(true);
-        Debug.Log($"[DeckController1] µ¦ ·Îµå ¿Ï·á. Ä«µå ¼ö: {deckToUse.Count}");
+        Debug.Log($"[DeckController1] ë± ë¡œë“œ ì™„ë£Œ. ì¹´ë“œ ìˆ˜: {deckToUse.Count}");
         return true;
     }
 
@@ -322,11 +322,11 @@ public class DeckController : MonoBehaviour
     {
         dbById.Clear();
 
-        // 1) cardDatabase¿¡ µî·ÏµÈ ÀüÃ¼ Ä«µå DBÀÎµ¦½Ì
+        // 1) cardDatabaseì— ë“±ë¡ëœ ì „ì²´ ì¹´ë“œ DBì¸ë±ì‹±
         foreach (var so in cardDatabase)
             TryIndex(so);
 
-        // 2) deckToUse¿¡ ÀÌ¹Ì µé¾îÀÖ´Â Ä«µå(¿¡µğÅÍ¿¡¼­ µå·¡±×ÇØµĞ °Í)µµ ÀÎµ¦½Ì
+        // 2) deckToUseì— ì´ë¯¸ ë“¤ì–´ìˆëŠ” ì¹´ë“œ(ì—ë””í„°ì—ì„œ ë“œë˜ê·¸í•´ë‘” ê²ƒ)ë„ ì¸ë±ì‹±
         foreach (var so in deckToUse)
             TryIndex(so);
     }
@@ -337,31 +337,31 @@ public class DeckController : MonoBehaviour
         if (so == null) return;
         if (string.IsNullOrEmpty(so.CardId))
         {
-            Debug.LogWarning($"[DeckController] Ä«µå¿¡ Id°¡ ºñ¾îÀÖ½À´Ï´Ù: {so.name}");
+            Debug.LogWarning($"[DeckController] ì¹´ë“œì— Idê°€ ë¹„ì–´ìˆìŠµë‹ˆë‹¤: {so.name}");
             return;
         }
-        dbById[so.CardId] = so; // ¸¶Áö¸· µî·Ï ¿ì¼±
+        dbById[so.CardId] = so; // ë§ˆì§€ë§‰ ë“±ë¡ ìš°ì„ 
     }
 
-    private void NotifyChanged() //deckÀÌ º¯ÇßÀ½À» ¾Ë¸®´Â ÄÚµå
+    private void NotifyChanged() //deckì´ ë³€í–ˆìŒì„ ì•Œë¦¬ëŠ” ì½”ë“œ
     {
         OnDeckChanged?.Invoke(deckToUse);
-        // ÇÊ¿ä½Ã ¿©±â¼­ UI/ÇÚµå/Ä«¿îÅÍ Á÷Á¢ °»½Å Æ®¸®°Å °¡´É
+        // í•„ìš”ì‹œ ì—¬ê¸°ì„œ UI/í•¸ë“œ/ì¹´ìš´í„° ì§ì ‘ ê°±ì‹  íŠ¸ë¦¬ê±° ê°€ëŠ¥
         // UIController.instance?.RefreshDeckList(deckToUse);
-        // HandController.instance?.OnDeckChanged(deckToUse); // ÀÌ·± ¸Ş¼­µå°¡ ÀÖ´Ù¸é ¿©±â¼­ È£ÃâµÈ´Ù
+        // HandController.instance?.OnDeckChanged(deckToUse); // ì´ëŸ° ë©”ì„œë“œê°€ ìˆë‹¤ë©´ ì—¬ê¸°ì„œ í˜¸ì¶œëœë‹¤
     }
 
 }
 
-//DeckController.instance.AddCardToDeckById("1", 1);//id ¹®ÀÚ¿­ÀÓ id·Î È£ÃâÇØ¼­ °¹¼ö¸¸Å­Ãß°¡
-//DeckController.Instance.RemoveCardById("1", 1); //id¹®ÀÚ¿­·Î id·Î È£ÃâÇØ¼­ °¹¼ö¸¸Å­ »èÁ¦
-//DeckController.Instance.SaveDeck();//ÀúÀå
-//DeckController.Instance.LoadDeck();//ºÒ·¯¿À±â
+//DeckController.instance.AddCardToDeckById("1", 1);//id ë¬¸ìì—´ì„ idë¡œ í˜¸ì¶œí•´ì„œ ê°¯ìˆ˜ë§Œí¼ì¶”ê°€
+//DeckController.Instance.RemoveCardById("1", 1); //idë¬¸ìì—´ë¡œ idë¡œ í˜¸ì¶œí•´ì„œ ê°¯ìˆ˜ë§Œí¼ ì‚­ì œ
+//DeckController.Instance.SaveDeck();//ì €ì¥
+//DeckController.Instance.LoadDeck();//ë¶ˆëŸ¬ì˜¤ê¸°
 //DeckController.Instance.Shuffle();
-//DeckController.Instance.AddCard(fireballSO, 2);// ºñÃßÃµ so¸íÄªÀ¸·Î ºÒ·¯¿À±â
+//DeckController.Instance.AddCard(fireballSO, 2);// ë¹„ì¶”ì²œ soëª…ì¹­ìœ¼ë¡œ ë¶ˆëŸ¬ì˜¤ê¸°
 
 //
-/* ¿øº»
+/* ì›ë³¸
  
 using System.Collections;
 using System.Collections.Generic;
@@ -405,7 +405,7 @@ public class DeckController : MonoBehaviour
         {
             int selected = Random.Range(0, tempDeck.Count);
             activeCards.Add(tempDeck[selected]);
-            tempDeck.RemoveAt(selected); //¼±ÅÃµÇÁö ¾ÊÀº activecard °ªÀ» ÁÙ¿©ÁØ´Ù.
+            tempDeck.RemoveAt(selected); //ì„ íƒë˜ì§€ ì•Šì€ activecard ê°’ì„ ì¤„ì—¬ì¤€ë‹¤.
             interations++;
         }
     }
@@ -427,7 +427,7 @@ public class DeckController : MonoBehaviour
         AudioManager.instance.PlaySFX(3); //sfx3
     }
 
-    public void DrawCardForMana() //µå·Î¿ì Ä«µåÀÇ ÄÚ½ºÆ® ±âÁ¦
+    public void DrawCardForMana() //ë“œë¡œìš° ì¹´ë“œì˜ ì½”ìŠ¤íŠ¸ ê¸°ì œ
     {
         if (BattleController.instance.playerMana >= drawCardCost)
         {

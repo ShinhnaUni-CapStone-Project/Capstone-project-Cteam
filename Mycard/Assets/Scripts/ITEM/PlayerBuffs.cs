@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -14,7 +14,7 @@ public class PlayerBuffs : MonoBehaviour
         if (instance == null)
         {
             instance = this;
-            DontDestroyOnLoad(gameObject); // ¾À ÀÌµ¿ÇØµµ À¯Áö
+            DontDestroyOnLoad(gameObject); // ì”¬ ì´ë™í•´ë„ ìœ ì§€
         }
         else
         {
@@ -30,7 +30,7 @@ public class PlayerBuffs : MonoBehaviour
 
     public void RecomputeAllPlayerCards()
     {
-        // 1) ÇÊµå À§ ÇÃ·¹ÀÌ¾î Ä«µå Àç°è»ê
+        // 1) í•„ë“œ ìœ„ í”Œë ˆì´ì–´ ì¹´ë“œ ì¬ê³„ì‚°
         if (CardPointsController.instance != null)
         {
             foreach (var p in CardPointsController.instance.playerCardPoints)
@@ -42,7 +42,7 @@ public class PlayerBuffs : MonoBehaviour
             }
         }
 
-        // 2) ¼ÕÆĞ Ä«µå Àç°è»ê
+        // 2) ì†íŒ¨ ì¹´ë“œ ì¬ê³„ì‚°
         if (HandController.instance != null)
         {
             foreach (var c in HandController.instance.heldCards)
@@ -54,7 +54,7 @@ public class PlayerBuffs : MonoBehaviour
 
     private void ApplyAttackToCardFromBase(Card card)
     {
-        // Ç×»ó "±âº»°ª + Àü¿ª¹öÇÁ"·Î Àç¼³Á¤(Áßº¹ °¡»ê ¹æÁö)
+        // í•­ìƒ "ê¸°ë³¸ê°’ + ì „ì—­ë²„í”„"ë¡œ ì¬ì„¤ì •(ì¤‘ë³µ ê°€ì‚° ë°©ì§€)
         if (card.cardSO != null)
         {
             card.attackPower = card.cardSO.attackPower + attackBonus;
@@ -63,4 +63,4 @@ public class PlayerBuffs : MonoBehaviour
         }
     }
 }
-//»ç¿ëÇÏÁö¸»°Í ºÒ¾ÈÀüÇÔ warbannerÃß°¡Àü¿¡ °ø°İ·Â ¿Ã¶ó°¡´Â ¹ö±× ¹ß°ß
+//ì‚¬ìš©í•˜ì§€ë§ê²ƒ ë¶ˆì•ˆì „í•¨ warbannerì¶”ê°€ì „ì— ê³µê²©ë ¥ ì˜¬ë¼ê°€ëŠ” ë²„ê·¸ ë°œê²¬

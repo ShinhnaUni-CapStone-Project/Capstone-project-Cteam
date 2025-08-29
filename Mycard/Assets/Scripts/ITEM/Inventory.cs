@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,7 +11,7 @@ public class Inventory : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;  // ½Ì±ÛÅæ ÃÊ±âÈ­
+        Instance = this;  // ì‹±ê¸€í†¤ ì´ˆê¸°í™”
     }
 
     public void AddItem(Item item)

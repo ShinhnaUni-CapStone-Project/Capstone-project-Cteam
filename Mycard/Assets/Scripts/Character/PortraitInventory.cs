@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class PortraitInventory : MonoBehaviour
 {
@@ -14,7 +14,7 @@ public class PortraitInventory : MonoBehaviour
     {
         foreach (var slot in portraitSlots)
         {
-            // ÀÚ½Ä À¯¹«°¡ ¾Æ´Ï¶ó '½ºÇÁ¶óÀÌÆ®°¡ ºñ¾ú´ÂÁö'·Î Ã¼Å©
+            // ìì‹ ìœ ë¬´ê°€ ì•„ë‹ˆë¼ 'ìŠ¤í”„ë¼ì´íŠ¸ê°€ ë¹„ì—ˆëŠ”ì§€'ë¡œ ì²´í¬
             if (slot != null && slot.IsEmpty)
             {
                 slot.SetSlot(character);
@@ -22,6 +22,6 @@ public class PortraitInventory : MonoBehaviour
             }
         }
 
-        Debug.LogWarning("ºó ÃÊ»óÈ­ ½½·ÔÀÌ ¾ø½À´Ï´Ù.");
+        Debug.LogWarning("ë¹ˆ ì´ˆìƒí™” ìŠ¬ë¡¯ì´ ì—†ìŠµë‹ˆë‹¤.");
     }
 }

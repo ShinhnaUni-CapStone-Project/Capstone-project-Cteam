@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,14 +11,14 @@ public class Banana : Item
     private void Awake()
     {
         this.ItemNumber = 1;
-        this.ItemName = "¹Ù³ª³ª";
+        this.ItemName = "ë°”ë‚˜ë‚˜";
         this.ItemSprite = Resources.Load<Sprite>("Sprites/2_Banana");
         this.ItemImage = new GameObject("BananaImage").AddComponent<Image>();
         this.get_Count = 1;
         this.isget = true;
 
     }
-    public virtual void OnAddItem() //¾ÆÀÌÅÛ¿¡¼­ ¾òÀº ¼öÄ¡¸¦ Àû¿ëÇÕ´Ï´Ù
+    public virtual void OnAddItem() //ì•„ì´í…œì—ì„œ ì–»ì€ ìˆ˜ì¹˜ë¥¼ ì ìš©í•©ë‹ˆë‹¤
     {
        
 

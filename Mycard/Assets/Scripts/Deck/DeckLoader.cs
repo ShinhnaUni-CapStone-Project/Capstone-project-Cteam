@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,7 +12,7 @@ public class DeckLoader : MonoBehaviour
         {
             DeckController.instance = Instantiate(theDeck);
             DontDestroyOnLoad(DeckController.instance.gameObject);
-            //¾À ÀüÈ¯½Ã¿¡µµ À¯Áö
+            //ì”¬ ì „í™˜ì‹œì—ë„ ìœ ì§€
         }
     }
 }

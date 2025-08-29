@@ -1,16 +1,16 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class WarBanner : Item
 {
-    public int attackBoostAmount = 2; // ¿Ã·ÁÁÙ °ø°Ý·Â ¼öÄ¡
+    public int attackBoostAmount = 2; // ì˜¬ë ¤ì¤„ ê³µê²©ë ¥ ìˆ˜ì¹˜
 
     private void Awake()
     {
         this.ItemNumber = 3;
-        this.ItemName = "ÀüÅõ ±ê¹ß";
+        this.ItemName = "ì „íˆ¬ ê¹ƒë°œ";
         this.ItemSprite = Resources.Load<Sprite>("Sprites/3_WarBanner");
         this.ItemImage = new GameObject("WarBannerImage").AddComponent<Image>();
         this.get_Count = 1;

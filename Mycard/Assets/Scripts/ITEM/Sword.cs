@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,7 +8,7 @@ public class Sword : Item
     private void Awake()
     {
         this.ItemNumber = 2;
-        this.ItemName = "°Ë";
+        this.ItemName = "ê²€";
         this.ItemSprite = Resources.Load<Sprite>("Sprites/1_Sword");
         this.ItemImage = new GameObject("SwordImage").AddComponent<Image>();
         this.get_Count = 1;
@@ -17,7 +17,7 @@ public class Sword : Item
     }
 
     // Update is called once per frame
-    public virtual void OnAddItem() //¾ÆÀÌÅÛ¿¡¼­ ¾òÀº ¼öÄ¡¸¦ Àû¿ëÇÕ´Ï´Ù
+    public virtual void OnAddItem() //ì•„ì´í…œì—ì„œ ì–»ì€ ìˆ˜ì¹˜ë¥¼ ì ìš©í•©ë‹ˆë‹¤
     {
         BattleController.instance.playermaxMana += 1;
         BattleController.instance.playerMana += 1;

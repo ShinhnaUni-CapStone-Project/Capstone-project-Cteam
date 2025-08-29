@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 
 public class PortraitSlot : MonoBehaviour
@@ -6,7 +6,7 @@ public class PortraitSlot : MonoBehaviour
     [SerializeField] private Image portraitImage;
     private CharacterSO character;
 
-    // ºó ½½·ÔÀÎÁö È®ÀÎ(½ºÇÁ¶óÀÌÆ® ºñ¾úÀ¸¸é ºó ½½·ÔÀ¸·Î °£ÁÖ)
+    // ë¹ˆ ìŠ¬ë¡¯ì¸ì§€ í™•ì¸(ìŠ¤í”„ë¼ì´íŠ¸ ë¹„ì—ˆìœ¼ë©´ ë¹ˆ ìŠ¬ë¡¯ìœ¼ë¡œ ê°„ì£¼)
     public bool IsEmpty => portraitImage == null || portraitImage.sprite == null;
 
     public void SetSlot(CharacterSO newCharacter)
@@ -15,7 +15,7 @@ public class PortraitSlot : MonoBehaviour
         portraitImage.sprite = character.portraitSprite;
         portraitImage.enabled = true;
 
-        // È¤½Ã ¾ËÆÄ°¡ 0ÀÎ °æ¿ì ´ëºñ
+        // í˜¹ì‹œ ì•ŒíŒŒê°€ 0ì¸ ê²½ìš° ëŒ€ë¹„
         var c = portraitImage.color;
         c.a = 1f;
         portraitImage.color = c;

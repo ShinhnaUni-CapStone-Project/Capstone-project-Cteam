@@ -1,9 +1,9 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 [CreateAssetMenu(fileName = "New Character", menuName = "Character", order = 2)]
 public class CharacterSO : ScriptableObject
 {
     public string characterName;
-    public Sprite portraitSprite;  // ÃÊ»óÈ­ ÀÌ¹ÌÁö
-    public string description;     // ÀÎ¹° ¼³¸í
+    public Sprite portraitSprite;  // ì´ˆìƒí™” ì´ë¯¸ì§€
+    public string description;     // ì¸ë¬¼ ì„¤ëª…
 }

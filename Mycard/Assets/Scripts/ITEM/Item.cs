@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -58,10 +58,10 @@ public class Item : MonoBehaviour
     {
         this.ItemSprite = itemSprite;
     }
-    //Ãß°¡µÇ¸é ÀÛµ¿
+    //ì¶”ê°€ë˜ë©´ ì‘ë™
     public virtual void OnAddItem() { }
 
     public virtual void OnPlayerCardPlaced(Card card) { }
 
 }
-//ÀÌÄÚµå¸¦ »ó¼ÓÇØ¼­ ¾ÆÀÌÅÛ ¸¸µé±â
+//ì´ì½”ë“œë¥¼ ìƒì†í•´ì„œ ì•„ì´í…œ ë§Œë“¤ê¸°
