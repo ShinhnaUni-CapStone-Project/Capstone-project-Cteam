@@ -19,8 +19,8 @@ public class UIController : MonoBehaviour
 
     public UIDamageIndicator playerDamage, enemyDamage;
 
-    public GameObject battleEndScreen;
-    public TMP_Text battleResultText;
+    public GameObject battleEndScreen_win, battleEndScreen_lose;
+    public TMP_Text battleResultText1, battleResultText2;
 
     public string mainMenuScene, battleSelectScene;
 
@@ -166,6 +166,13 @@ public class UIController : MonoBehaviour
             Debug.LogError("캐릭터 ScriptableObject를 찾을 수 없습니다!");
         }
     }
+
+    public void CardAdd1()
+    {
+        DeckController.instance.AddCardToDeckById("1", 1);
+        DeckController.instance.SaveDeck();
+    }
+
     
     public void Pauseup()
     {

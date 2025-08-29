@@ -248,7 +248,8 @@ public class BattleController : MonoBehaviour
 
         if(enemyHealth <= 0)    // 적 체력 0 이하 승리시
         {
-            UIController.instance.battleResultText.text = "You Won!";
+            
+            UIController.instance.battleResultText1.text = "You Won!";
 
             foreach(CardPlacePoint point in CardPointsController.instance.enemyCardPoints)
             {
@@ -260,7 +261,8 @@ public class BattleController : MonoBehaviour
         }
         else // 패배시 *필드에 남아있는 카드 제거 하는거 꼭 해야되는거면 패배 승리 상관 없이 전부 해야되는거 아닌가?*
         {
-            UIController.instance.battleResultText.text = "You Lose!";
+            
+            UIController.instance.battleResultText2.text = "You Lose!";
 
             foreach (CardPlacePoint point in CardPointsController.instance.playerCardPoints)
             {
@@ -279,6 +281,13 @@ public class BattleController : MonoBehaviour
     {
         yield return new WaitForSeconds(resultScreenDelayTime); // 지연 시키고
 
-        UIController.instance.battleEndScreen.SetActive(true);  // 결과 UI 표시
+        if (enemyHealth <= 0)
+        {
+            UIController.instance.battleEndScreen_win.SetActive(true);  // 결과 UI 표시
+        }
+        else
+        {
+            UIController.instance.battleEndScreen_lose.SetActive(true);
+        }
     }
 }

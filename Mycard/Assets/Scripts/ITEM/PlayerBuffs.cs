@@ -63,3 +63,4 @@ public class PlayerBuffs : MonoBehaviour
         }
     }
 }
+//사용하지말것 불안전함 warbanner추가전에 공격력 올라가는 버그 발견

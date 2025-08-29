@@ -6,11 +6,33 @@ using UnityEngine;
 public class CardScriptableObject : ScriptableObject
 {
     public string cardName;
-
+    public string Id; //Id 카드 고유 Id
+    public CardType cardType; //추가1
+    public DamageType damageType;//추가2
     [TextArea]
     public string actionDescription, cardLore;
     
     public int currentHealth, attackPower, manaCost;
 
     public Sprite characterSprite, bgSprite;
+
+    public enum CardType //추가1
+    {
+        Fire,
+        Ice,
+        Wind,
+        electric,
+        Light,
+        Dark
+
+    }
+    public enum DamageType //추가2
+    {
+        Fire,
+        Ice,
+        Wind,
+        electric,
+        Light,
+        Dark
+    }
 }
