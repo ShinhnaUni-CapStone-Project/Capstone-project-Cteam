@@ -17,7 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/CompanionSelectScene.unity
     guid: ee3c65afa2e03a447b248b34a5171415
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/Battle_android.unity
     guid: 56ec19bee42f78d4ab432c40300d01aa
   - enabled: 1
