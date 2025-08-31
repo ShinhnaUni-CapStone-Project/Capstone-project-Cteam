@@ -103,17 +103,51 @@ public partial class ShopUI : MonoBehaviour
     // '포장 기술' (ShopUI의 현재 상태를 -> 택배 상자에 담기)
     public ShopSessionDTO ExportSession()
     {
+        // 안전장치: 아직 상점이 열리기 전이거나 슬롯이 비어있는 예외 상황을 방어합니다.
+        if (_dummy == null || _dummy.Count == 0)
+        {
+            return new ShopSessionDTO
+            {
+                rerollCount = _rerollCount,
+                slots = System.Array.Empty<SlotDTO>() // 빈 배열을 반환하여 오류를 막습니다.
+            };
+        }
+
         var dto = new ShopSessionDTO
         {
             rerollCount = _rerollCount,
             slots = new SlotDTO[_dummy.Count]
         };
+        
         for (int i = 0; i < _dummy.Count; i++)
         {
             var vm = _dummy[i];
+
+            // itemId는 반드시 카드의 고유 ID('CardId')로 저장
+            string itemId = (vm.cardData != null && !string.IsNullOrEmpty(vm.cardData.CardId))
+                ? vm.cardData.CardId
+                : (vm.title ?? string.Empty);
+            
+            // 기준가 보정 로직 (vm.price가 0/미설정인 레거시/초기 상태 대비)
+            int basePrice = vm.price;
+            if (basePrice <= 0)
+            {
+                string assumedDetail = string.IsNullOrEmpty(vm.detail) && vm.cardData != null ? "Card" : vm.detail;
+                string nameForPrice  = vm.cardData != null ? vm.cardData.cardName : vm.title;
+                basePrice = BasePriceOf(assumedDetail, nameForPrice);
+            }
+
+            // DTO에 '최종 가격'을 저장합니다.
+            var tmp = vm;
+            tmp.price = basePrice;
+            int finalPrice = FinalPrice(in tmp);
+
             dto.slots[i] = new SlotDTO {
-                itemId = vm.cardData?.CardId ?? vm.title, // 안정적인 CardId 사용
-                soldOut = vm.soldOut
+                itemId = itemId,
+                soldOut = vm.soldOut,
+                detail = string.IsNullOrEmpty(vm.detail) && vm.cardData != null ? "Card" : vm.detail,
+                price = Mathf.Max(0, finalPrice), // 가격이 음수가 되지 않도록 보정
+                isDeal = vm.isDeal
             };
         }
         return dto;
@@ -145,6 +179,9 @@ public partial class ShopUI : MonoBehaviour
         // 리롤 로직에 필요한 카드 소스 데이터를 초기화합니다.
         for (int i = 0; i < _cardSources.Length; i++) _cardSources[i] = null;
 
+        // 할인율 역산에 사용할 상수를 미리 계산 (0으로 나누는 오류 방지)
+        float k = Mathf.Clamp01(1f - dealDiscount);
+
         for (int i = 0; i < dto.slots.Length; i++)
         {
             var slotData = dto.slots[i];
@@ -153,44 +190,58 @@ public partial class ShopUI : MonoBehaviour
             // [CCTV] 각 슬롯의 원본 데이터 확인
             Debug.Log($" - 슬롯 #{i} 복원 시도: itemId='{slotData.itemId}', soldOut={slotData.soldOut}");
 
-            // 1. cardId로 카드를 먼저 찾아봅니다.
-            if (!string.IsNullOrEmpty(slotData.itemId) && _cardIdMap.TryGetValue(slotData.itemId, out var soById))
+            // --- 1. 카드/비카드 판별 ---
+            CardScriptableObject so = null;
+            string id = slotData.itemId ?? ""; // null 방지
+            if (!string.IsNullOrEmpty(id))
             {
-                vm = ToVM(soById);
-
-                // [CCTV] 카드 복원 성공 여부 확인
-                Debug.Log($"<color=green>   -> [ID로] 카드 복원 성공: {soById.cardName}</color>");
-            
-                // 첫 3칸은 카드 슬롯이므로, 리롤을 위해 원본 데이터를 저장해둡니다.
-                if (i < 3) _cardSources[i] = soById;
+                // CardId 우선, 실패 시 CardName으로 찾는 과거 데이터 호환 로직
+                if (_cardIdMap.TryGetValue(id, out var byId)) so = byId;
+                else if (_cardNameMap.TryGetValue(id, out var byName)) so = byName;
             }
-            // 2. 실패 시 CardName으로 폴백
-            else if (!string.IsNullOrEmpty(slotData.itemId) && _cardNameMap.TryGetValue(slotData.itemId, out var soByName))
-            {
-                vm = ToVM(soByName);
-                if (i < 3) _cardSources[i] = soByName;
 
-                Debug.Log($"<color=green>   -> [이름으로] 카드 복원 성공: {soByName.cardName}</color>");
+            if (so != null)
+            {
+                vm = ToVM(so);
+                if (i < 3) _cardSources[i] = so; // 리롤 원본 보존
             }
             else
             {
-                // 3) 카드가 아니면 문자열 아이템(유물/소모품)으로 복원
-                string id = slotData.itemId ?? "";
-                string detail = _consumablesSet.Contains(id) ? "Consumable"
-                            : _relicsSet.Contains(id)      ? "Relic"
-                            : "Relic"; // 모르면 유물로 취급
-
-                vm = new ShopSlotVM
-                {
-                    title   = id,
-                    detail  = detail,
-                    price   = BasePriceOf(detail, id),
-                };
-                // [CCTV] 유물/소모품 복원 확인
-                Debug.Log($"<color=cyan>   -> 유물/소모품으로 복원: {slotData.itemId} (타입: {detail})</color>");
+                // DTO에 타입 정보가 있으면 그걸 쓰고, 없으면 추론합니다.
+                string detail = !string.IsNullOrEmpty(slotData.detail) ? slotData.detail 
+                            : _consumablesSet.Contains(id) ? "Consumable" 
+                            : "Relic";
+                vm = new ShopSlotVM { title = id, detail = detail };
             }
 
+            // --- 2. 가격/특가 복원 (가장 정교한 부분) ---
+            int storedFinal = Mathf.Max(0, slotData.price);
+            bool isDeal = slotData.isDeal;
+
+            int basePrice;
+            if (storedFinal > 0)
+            {
+                if (isDeal)
+                {
+                    // ★ 핵심: 최종 할인가에서 원래 기준가를 오차 없이 역으로 계산합니다.
+                    basePrice = Mathf.FloorToInt((storedFinal - 1f) / Mathf.Max(0.01f, k)) + 1;
+                }
+                else
+                {
+                    basePrice = storedFinal;
+                }
+            }
+            else
+            {
+                // ★ 안전장치 3: 가격 정보가 없는 과거 데이터를 위한 대비책
+                string nameForPrice = (vm.cardData != null) ? vm.cardData.cardName : vm.title;
+                basePrice = BasePriceOf(vm.detail, nameForPrice);
+            }
+            
+            vm.price = Mathf.Max(1, basePrice); // 가격이 최소 1 이상이 되도록 보정
+            vm.isDeal = isDeal;
             vm.soldOut = slotData.soldOut;
+
             _dummy.Add(vm);
         }
 

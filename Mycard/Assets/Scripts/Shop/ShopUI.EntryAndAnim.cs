@@ -4,7 +4,15 @@ using UnityEngine;
 public partial class ShopUI : MonoBehaviour
 {
     
+    // ==========================================================
+    // 7. UI 공개 API (Public API)
+    // - 외부(예: ShopOverlayController)에서 이 UI를 제어하기 위한 공식적인 명령입니다.
+    // - Open과 Close는 '화면 표시'와 관련된 핵심 기능이므로, 이 파일에 있는 것이 적절합니다.
+    // ==========================================================
 
+    /// <summary>
+    /// 상점 UI를 화면에 표시합니다.
+    /// </summary>
     public void Open()
     {
         // 이미 열려있으면 아무것도 안 함
@@ -42,7 +50,9 @@ public partial class ShopUI : MonoBehaviour
             Debug.Log($"<color=cyan>[CCTV] 화면 표시용 아이템 목록:</color> {displayItems}", this);
         }
 
-
+        // --- 최종 화면 갱신 ---
+        // 결정된 상품 목록(_dummy)을 기반으로 실제 UI 요소들을 만들고(RebuildGrid),
+        // 골드와 리롤 가격을 갱신합니다(RefreshTopbar).
         RebuildGrid();
         RefreshTopbar();
 
@@ -52,14 +62,28 @@ public partial class ShopUI : MonoBehaviour
         _isOpen = true;
     }
 
+    /// <summary>
+    /// 상점 UI를 화면에서 닫습니다.
+    /// </summary>
     public void Close()
     {
-        if (!_isOpen) return;
+        if (!_isOpen) return; // 이미 닫혀있으면 중복 실행 방지
         if (_animCo != null) StopCoroutine(_animCo);
         _animCo = StartCoroutine(AnimateClose());
         _isOpen = false;
     }
 
+
+
+    // ==========================================================
+    // 8. UI 애니메이션 및 내부 처리 (Private Implementation)
+    // - UI를 열고 닫는 세부적인 애니메이션과 상태 처리를 담당합니다.
+    // - 이 기능들은 오직 이 파일 내부에서만 사용되며, 응집도가 높습니다.
+    // ==========================================================
+
+    /// <summary>
+    /// UI를 즉시 숨깁니다. (Awake에서 초기 상태 설정용)
+    /// </summary>
     private void HideImmediate()
     {
         if (panel == null) panel = GetComponent<CanvasGroup>();
@@ -70,6 +94,9 @@ public partial class ShopUI : MonoBehaviour
         if (window) window.localScale = Vector3.one * ScaleFrom;
     }
 
+    /// <summary>
+    /// UI를 부드럽게 나타나게 하는 애니메이션 코루틴입니다.
+    /// </summary>
     private IEnumerator AnimateOpen()
     {
         float t = 0f;
@@ -93,7 +120,9 @@ public partial class ShopUI : MonoBehaviour
         panel.interactable = true;
         _animCo = null;
     }
-
+    /// <summary>
+    /// UI를 부드럽게 사라지게 하는 애니메이션 코루틴입니다.
+    /// </summary>
     private IEnumerator AnimateClose()
     {
         panel.blocksRaycasts = false;
