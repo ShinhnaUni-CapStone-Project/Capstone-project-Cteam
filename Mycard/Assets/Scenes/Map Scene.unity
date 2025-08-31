@@ -1018,6 +1018,63 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 951967585}
   m_CullTransparentMesh: 1
+--- !u!1001 &1083332301
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3137469675035929439, guid: 2abe4601f9c2fba44ae94b0581ed6eb2, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3137469675035929439, guid: 2abe4601f9c2fba44ae94b0581ed6eb2, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3137469675035929439, guid: 2abe4601f9c2fba44ae94b0581ed6eb2, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3137469675035929439, guid: 2abe4601f9c2fba44ae94b0581ed6eb2, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3137469675035929439, guid: 2abe4601f9c2fba44ae94b0581ed6eb2, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3137469675035929439, guid: 2abe4601f9c2fba44ae94b0581ed6eb2, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3137469675035929439, guid: 2abe4601f9c2fba44ae94b0581ed6eb2, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3137469675035929439, guid: 2abe4601f9c2fba44ae94b0581ed6eb2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3137469675035929439, guid: 2abe4601f9c2fba44ae94b0581ed6eb2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3137469675035929439, guid: 2abe4601f9c2fba44ae94b0581ed6eb2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6108894568201979756, guid: 2abe4601f9c2fba44ae94b0581ed6eb2, type: 3}
+      propertyPath: m_Name
+      value: Deck Controller
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 2abe4601f9c2fba44ae94b0581ed6eb2, type: 3}
 --- !u!1 &1127311538
 GameObject:
   m_ObjectHideFlags: 0
@@ -2400,16 +2457,15 @@ MonoBehaviour:
   gridParent: {fileID: 1405948179}
   slotPrefab: {fileID: 2092496486968644853, guid: 1ab3a2d68e5db464e9c1b3e784412e3b, type: 3}
   goldText: {fileID: 1209442272}
-  testGold: 300
   rerollPriceText: {fileID: 1631168556}
   rerollButton: {fileID: 1397573904}
+  testGold: 300
   baseReroll: 30
   rerollGrowth: 1.2
   dealChance: 0.25
   maxDeals: 2
   dealDiscount: 0.2
   cardPool: []
-  rerollCooldownSec: 0.2
   verboseLogs: 1
 --- !u!1 &1692489624
 GameObject:
@@ -2901,3 +2957,4 @@ SceneRoots:
   - {fileID: 1872042022}
   - {fileID: 143831004}
   - {fileID: 70686780}
+  - {fileID: 1083332301}

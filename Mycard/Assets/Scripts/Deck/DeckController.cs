@@ -20,6 +20,11 @@ public class DeckController : MonoBehaviour
     private void Awake()
     {
         instance = this;
+        //잘작동함
+        if (instance != null && instance != this) { Destroy(gameObject); return; }
+        instance = this;
+        DontDestroyOnLoad(gameObject); // 이 오브젝트를 다음 씬으로 그대로 가져감
+
     }
     [Header("현재 사용 덱(인스펙터/코드로 편집)")]
     public List<CardScriptableObject> deckToUse = new List<CardScriptableObject>();
@@ -73,7 +78,7 @@ public class DeckController : MonoBehaviour
          */
     }
     /*
-     void Awake() 이러면 다음씬에서도 유지된다 단 이걸 쓸 경우 다른씬에서 덱컨트롤러를 없애야한다 즉 이걸 호출하는 경우가 첫번째 배틀인경우임
+     void Awake() //이러면 다음씬에서도 유지된다 단 이걸 쓸 경우 다른씬에서 덱컨트롤러를 없애야한다 즉 이걸 호출하는 경우가 첫번째 배틀인경우임
     {
         if (instance != null && instance != this) { Destroy(gameObject); return; }
         instance = this;

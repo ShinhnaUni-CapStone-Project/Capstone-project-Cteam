@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class PlayerBuffs : MonoBehaviour
 {
+    /*
     public static PlayerBuffs instance;
 
     [Header("Global Buffs")]
@@ -61,6 +62,6 @@ public class PlayerBuffs : MonoBehaviour
             card.UpdateCardDisplay();
             card.ApplyAttackBuffOutline(attackBonus > 0);
         }
-    }
+    }*/
 }
 //사용하지말것 불안전함 warbanner추가전에 공격력 올라가는 버그 발견

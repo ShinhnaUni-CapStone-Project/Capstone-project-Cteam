@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class WarBanner : Item
 {
+    /*
     public int attackBoostAmount = 2; // 올려줄 공격력 수치
 
     private void Awake()
@@ -27,4 +28,5 @@ public class WarBanner : Item
 
         PlayerBuffs.instance.AddAttackBonus(attackBoostAmount);
     }
+    */
 }

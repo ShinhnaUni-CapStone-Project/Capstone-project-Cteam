@@ -169,11 +169,15 @@ public class UIController : MonoBehaviour
 
     public void CardAdd1()
     {
-        DeckController.instance.AddCardToDeckById("1", 1);
-        DeckController.instance.SaveDeck();
+        DeckController.instance.AddCardToDeckById("Knight", 1);
+        //DeckController.instance.SaveDeck();
+    }
+    
+    public void AddRelic()
+    {
+        
     }
 
-    
     public void Pauseup()
     {
         PauseUnPause();
