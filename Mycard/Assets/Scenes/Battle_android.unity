@@ -2290,7 +2290,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5851692053032930952, guid: ee8fc1c4c23608047a11b53be87f7760, type: 3}
       propertyPath: playerHealth
-      value: 1
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 6571326418625008983, guid: ee8fc1c4c23608047a11b53be87f7760, type: 3}
       propertyPath: m_LocalPosition.x
