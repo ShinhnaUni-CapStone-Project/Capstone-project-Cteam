@@ -223,4 +223,32 @@ namespace Game.Save
         public int Index { get; set; }
     }
 
+    //이벤트 진행을 위한 세션 저장
+    [Table("ActiveEventSession")]
+    public class ActiveEventSession
+    {
+        [PrimaryKey] public string RunId { get; set; }
+        public string Json { get; set; } // EventSessionDTO가 저장될 곳
+        public string UpdatedAtUtc { get; set; }
+
+        // (선택) 안전 스탬프를 위해 위치 정보를 추가할 수도 있습니다.
+        // public int Floor { get; set; }
+        // public int Index { get; set; }
+    }
+
+    // ... (간단한 조회 헬퍼 함수들) ...
+
+    /// <summary>
+    /// LoadCurrentRun의 결과를 하나의 묶음(객체)으로 전달하기 위한 클래스입니다.
+    /// </summary>
+    public sealed class RunLoadResult
+    {
+        public CurrentRun Run;
+        public List<CardInDeck> Cards;
+        public List<RelicInPossession> Relics;
+        public List<PotionInPossession> Potions;
+        public List<MapNodeState> Nodes;
+        public List<RngState> RngStates;
+    }
+
 }

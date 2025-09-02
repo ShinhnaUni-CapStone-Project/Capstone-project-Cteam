@@ -9,7 +9,7 @@ using Game.Save; // NodeType 충돌 방지
 public class NodeGoScene : MonoBehaviour
 {
     // --- 버튼이 로드할 씬 이름들 (씬이 아직 없어도 있다고 가정하고 필드만 만들어 둡니다) ---
-    [SerializeField] private string battleSceneName = "Battle";          // 일반 전투
+    [SerializeField] private string battleSceneName = "Battle_android";          // 일반 전투
     [SerializeField] private string eliteSceneName = "Elite";            // 엘리트 전투
     [SerializeField] private string bossSceneName = "Boss";              // 보스 전투
     [SerializeField] private string eventSceneName = "EventScene";       // 이벤트
@@ -33,6 +33,8 @@ public class NodeGoScene : MonoBehaviour
 
     // MapTraversalController가 읽을 수 있도록 public 프로퍼티 제공
     public NodeType nodeType { get { return assignedNodeType; } }
+    public string assignedScene; //이 노드가 이동할 씬의 이름
+    public string eventIdOverride; // 특정 이벤트를 강제할 때 사용할 ID 변수
 
     void Awake()
     {
@@ -107,8 +109,14 @@ public class NodeGoScene : MonoBehaviour
     // 버튼에서 이 함수 하나만 연결하면 됨
     public void GoToAssignedScene()
     {
-        string sceneToLoad = ResolveSceneName(assignedNodeType);
-        LoadSceneWithCommonHooks(sceneToLoad);
+        // 노드 타입이 이벤트이면, 아무것도 하지 않고 즉시 함수를 종료
+        if (nodeType == NodeType.Event)
+            return;
+
+
+        // 이벤트가 아닐 경우에만, 기존 로직대로 씬을 찾아 이동합니다.
+        if (!string.IsNullOrEmpty(assignedScene))
+            UnityEngine.SceneManagement.SceneManager.LoadScene(assignedScene);
     }
 
     private string ResolveSceneName(NodeType type)
