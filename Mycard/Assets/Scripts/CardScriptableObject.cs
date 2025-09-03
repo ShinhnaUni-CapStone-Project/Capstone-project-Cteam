@@ -8,8 +8,8 @@ public class CardScriptableObject : ScriptableObject
 
     public string cardName;
     public string CardId; //Id 카드 고유 Id
-    public CardType cardType; //추가1
-    public DamageType damageType;//추가2
+    //public CardType cardType; //추가1
+    //public DamageType damageType;//추가2
 
     [TextArea]
     public string actionDescription, cardLore;
@@ -18,6 +18,7 @@ public class CardScriptableObject : ScriptableObject
 
     public Sprite characterSprite, bgSprite;
 
+    /*
     public enum CardType //추가1
     {
         Fire,
@@ -37,4 +38,5 @@ public class CardScriptableObject : ScriptableObject
         Light,
         Dark
     }
+    */
 }

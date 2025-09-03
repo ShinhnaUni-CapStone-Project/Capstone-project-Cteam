@@ -11,7 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Map Scene.unity
     guid: 2f47783a4d2f0e14faeaccbf2d3b87e5
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Battle.unity
     guid: 497a576b22705d14388d4ac5a72e67a6
   - enabled: 1
@@ -20,10 +20,4 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Battle_android.unity
     guid: 56ec19bee42f78d4ab432c40300d01aa
-  - enabled: 1
-    path: Assets/Scenes/Battle1.unity
-    guid: 3c8a154df3cc0bd45b2886b3b30b221f
-  - enabled: 1
-    path: Assets/Scenes/Battle2.unity
-    guid: 6ff2ba0225670f64bbb1c6c2363380c4
   m_configObjects: {}
