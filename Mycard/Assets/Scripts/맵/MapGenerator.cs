@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using UnityEditor;
 #endif
 using UnityEngine.UI;
+using Game.Save;
 
 public class MapGenerator : MonoBehaviour
 {

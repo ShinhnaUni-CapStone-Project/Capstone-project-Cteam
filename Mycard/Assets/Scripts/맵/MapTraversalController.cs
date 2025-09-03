@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using Game.Save;
+using UnityEngine.SceneManagement; // SceneManager를 사용하기 위해 추가
 
 public class MapTraversalController : MonoBehaviour
 {
@@ -12,7 +13,11 @@ public class MapTraversalController : MonoBehaviour
     string _runId;
     CurrentRun _run;
 
-    private ShopOverlayController _shopOverlay; //상점 오버레이 저장
+    [SerializeField] private ShopOverlayController _shopOverlay; //상점 오버레이 저장
+    [SerializeField] private string eventSceneName = "EventScene";     // 공통 이벤트 씬 이름
+    [SerializeField] private string defaultEventId = "GenericEvent01"; // 기본 이벤트 ID
+    [SerializeField] private string battleSceneName = "Battle_android"; // 전투 씬의 이름을 에디터에서 설정
+
 
     void Awake()
     {
@@ -45,22 +50,23 @@ public class MapTraversalController : MonoBehaviour
 
     public void OnNodeClicked(NodeGoScene target)
     {
-        // [디버그 1] 함수가 호출되었는지 확인
-        Debug.Log($"--- OnNodeClicked --- Target: ({target.floor},{target.index})", this);
+        // [디버그 1] 함수 시작: 어떤 노드가 클릭되었는지 기록
+        Debug.Log($"--- OnNodeClicked --- Target: ({target.floor},{target.index}), Type: {target.nodeType}");
 
         // 1. 현재 노드 정보를 가져옵니다.
         if (!_nodes.TryGetValue((_run.Floor, _run.NodeIndex), out var curNode)) return;
 
         // 2. 현재 클릭이 어떤 종류인지 정의합니다.
         bool isMoveToChild = curNode.children != null && curNode.children.Contains(target);
-        bool isReclickShop = (curNode == target && target.nodeType == NodeType.Shop);
+        bool isReclickSameNode = (_run.Floor == target.floor && _run.NodeIndex == target.index);
 
         // [디버그 2] 클릭 종류 판단 결과 출력(이동으로 온건지 다시 누른건지)
-        Debug.Log($"<color=yellow>ANALYSIS >> isMoveToChild: {isMoveToChild}, isReclickShop: {isReclickShop}</color>", this);
+        Debug.Log($"<color=yellow>ANALYSIS >> isMoveToChild: {isMoveToChild}, isReclickSameNode: {isReclickSameNode}</color>", this);
 
         // 3. 유효하지 않은 클릭은 입구에서 차단합니다
-        if (!isMoveToChild && !isReclickShop)
+        if (!isMoveToChild && !isReclickSameNode)
         {
+            Debug.Log("<color=red>INVALID CLICK: Action ignored.</color>");
             return;
         }
 
@@ -73,9 +79,16 @@ public class MapTraversalController : MonoBehaviour
             
             // 상점 리클릭 아님 상태로 리셋
             _shopOverlay?.ResetShopSession();
+
+            // 나중에 이벤트 세션도 리셋해야 할 경우를 대비한 주석이 아래에 있습니다.
+            // _eventOverlay?.ResetEventSession(); 
+
             // db 상점 정보도 리셋합니다.
             if (!string.IsNullOrEmpty(_run?.RunId))
+            {
             DatabaseManager.Instance.DeleteActiveShopSession(_run.RunId);
+            DatabaseManager.Instance.DeleteActiveEventSession(_run.RunId);
+            }
 
             _shopOverlay?.ClearCachedSession(); //진짜 상점 메모리 데이터 리셋
 
@@ -102,15 +115,72 @@ public class MapTraversalController : MonoBehaviour
             UpdateReachable(target.floor, target.index);
         }
 
+        // --- 최종 행동 결정 분기 시작 ---
+        Debug.Log($"--- Final Action --- Deciding action for node type: {target.nodeType}");
+
+
         // 5. 최종 행동 결정: 모든 검사와 상태 변경이 끝난 후, 딱 한 번만 결정합니다.
         if (target.nodeType == NodeType.Shop)
         {
             // 목표가 상점이면 (새로 이동했든, 다시 클릭했든) 상점 오버레이를 엽니다.
-            _shopOverlay?.OpenForNode(target.floor, target.index);
+            Debug.Log("<color=green>ACTION: Opening Shop Overlay.</color>");
+            _shopOverlay?.OpenForNode(_run.Floor, _run.NodeIndex);
+        }
+        else if (target.nodeType == NodeType.Event)
+        {
+            Debug.Log("<color=green>ACTION: Processing Event Node.</color>");
+            // '전문가 보관소'에서 EventManager를 꺼내옵니다.
+            var em = ServiceRegistry.GetRequired<IEventManager>();
+            if (em == null)
+            {
+                Debug.LogError("[MapTraversal] EventManager가 등록되지 않았습니다.");
+                return;
+            }
+
+            // '같은 노드 재클릭'일 경우 (주로 '이어하기' 직후)
+            if (isReclickSameNode && !isMoveToChild)
+            {
+                // DB에 진행 중인 이벤트가 있는지 '확인만' 합니다.
+                var activeSession = em.TryLoadActive();
+                if (activeSession != null)
+                {
+                    // 있다면, 이벤트 씬으로 보냅니다.
+                    SceneManager.LoadScene(eventSceneName);
+                }
+                // 없다면 (이미 해결된 이벤트라면), 아무것도 하지 않습니다.
+            }
+
+            // '새로운 노드로 이동'일 경우
+            else if (isMoveToChild)
+            {
+                // 이 노드에 지정된 특정 이벤트 ID가 있으면 그것을 사용하고, 없으면 기본 ID를 사용합니다.
+                string eventId = !string.IsNullOrEmpty(target.eventIdOverride)
+                                ? target.eventIdOverride
+                                : defaultEventId;
+
+                // DB에 활성 이벤트가 없으면 '새로 만들고', 있다면 불러옵니다.
+                var session = em.LoadActiveOrCreate(eventId);
+                if (session != null)
+                {
+                    SceneManager.LoadScene(eventSceneName);
+                }
+            }
+
+        }
+        else if (target.nodeType == NodeType.Battle)
+        {
+            // 전투 씬의 이름을 직접 사용하여 씬을 로드합니다.
+            SceneManager.LoadScene(battleSceneName);
         }
         else if (isMoveToChild) // 상점이 아닌 다른 노드는, '이동'했을 때만 씬을 전환합니다.
         {
+            Debug.Log($"<color=cyan>ACTION: Other node type. Calling GoToAssignedScene for '{target.assignedScene}'</color>");
             target.GoToAssignedScene();
+        }
+        else
+        {
+        // 어떤 조건에도 해당하지 않음
+        Debug.Log("<color=orange>WARNING: No action taken. isMoveToChild was false for a non-shop/event node.</color>");
         }
     }
 

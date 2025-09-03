@@ -31,6 +31,7 @@ public sealed class DatabaseManager
     /// <param name="fileName">세이브 파일의 이름입니다.</param>
     public void Connect(string fileName = "game_save.db")
     {
+        if (_conn != null) return; // ← 이미 연결되어 있으면 즉시 종료
         // Application.persistentDataPath는 PC, 모바일 등 어떤 환경에서도
         // 안전하게 파일을 저장할 수 있는 경로를 자동으로 찾아줍니다.
         var dir = Application.persistentDataPath;
@@ -88,6 +89,7 @@ public sealed class DatabaseManager
         _conn.CreateTable<MapNodeState>();
         _conn.CreateTable<RngState>();
         _conn.CreateTable<ActiveShopSession>(); //db 상점
+        _conn.CreateTable<ActiveEventSession>(); //db 이벤트
     }
 
     /// <summary>
@@ -270,20 +272,7 @@ public sealed class DatabaseManager
         Debug.Log($"[DB] 런 종료 및 요약 저장 완료: {summary.RunId}");
     }
 
-    // ... (간단한 조회 헬퍼 함수들) ...
-
-    /// <summary>
-    /// LoadCurrentRun의 결과를 하나의 묶음(객체)으로 전달하기 위한 클래스입니다.
-    /// </summary>
-    public sealed class RunLoadResult
-    {
-        public CurrentRun Run;
-        public List<CardInDeck> Cards;
-        public List<RelicInPossession> Relics;
-        public List<PotionInPossession> Potions;
-        public List<MapNodeState> Nodes;
-        public List<RngState> RngStates;
-    }
+    
 
     // ==========================================================
     // 4) 부분 업데이트 (안전한 저장)
@@ -362,7 +351,69 @@ public sealed class DatabaseManager
         _conn.Table<ActiveShopSession>().Delete(x => x.RunId == runId);
     }
 
+    // 1. HP 업데이트 함수 (품질 보강)
+    public void UpdateRunHp(string runId, int newHp)
+    {
+        var run = _conn.Find<CurrentRun>(runId);
+        if (run == null) return;
 
+        // 경계값 보정: 체력이 0 미만 또는 최대 체력을 초과하지 않도록 안전장치 추가
+        int maxHp = run.MaxHpBase + run.MaxHpFromPerks + run.MaxHpFromRelics;
+        run.CurrentHp = Mathf.Clamp(newHp, 0, Mathf.Max(1, maxHp));
+
+        run.UpdatedAtUtc = System.DateTime.UtcNow.ToString("o");
+        _conn.Update(run);
+    }
+
+    // 2. 이벤트 세션 JSON 로드 함수 (신규 추가)
+    public string LoadActiveEventSessionJson(string runId)
+    {
+        if (string.IsNullOrEmpty(runId)) return null;
+        var row = _conn.Find<ActiveEventSession>(runId);
+        return row?.Json;
+    }
+
+    // 3. 노드 상태 업데이트/삽입 함수 (신규 추가)
+    public void UpsertNodeState(MapNodeState node)
+    {
+        if (node == null || string.IsNullOrEmpty(node.RunId)) return;
+
+        // 복합키처럼 작동하도록, 기존 데이터가 있는지 먼저 확인
+        var existing = _conn.Table<MapNodeState>().FirstOrDefault(n =>
+            n.RunId == node.RunId &&
+            n.Act == node.Act &&
+            n.Floor == node.Floor &&
+            n.NodeIndex == node.NodeIndex);
+
+        if (existing != null)
+            node.Id = existing.Id; // 기존 데이터가 있으면 PK를 유지하여 덮어쓰기(Update)가 되도록 함
+
+        _conn.InsertOrReplace(node);
+    }
+
+    // --- 활성 이벤트 세션: RunId 1-row 저장소 ---
+    public void UpsertActiveEventSession(string runId, string json)
+    {
+        if (string.IsNullOrEmpty(runId)) return;
+        var row = new ActiveEventSession {
+            RunId = runId,
+            Json = json ?? "",
+            UpdatedAtUtc = System.DateTime.UtcNow.ToString("o")
+        };
+        _conn.InsertOrReplace(row);
+    }
+
+    public ActiveEventSession LoadActiveEventSession(string runId)
+    {
+        if (string.IsNullOrEmpty(runId)) return null;
+        return _conn.Find<ActiveEventSession>(runId);
+    }
+
+    public void DeleteActiveEventSession(string runId)
+    {
+        if (string.IsNullOrEmpty(runId)) return;
+        _conn.Table<ActiveEventSession>().Delete(x => x.RunId == runId);
+    }
     
 
     public void Close()

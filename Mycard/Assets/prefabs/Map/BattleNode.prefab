@@ -145,7 +145,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02fc3f03653c7fa4dbfce8b42bac8dcd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  battleSceneName: Battle
+  battleSceneName: Battle_android
   eliteSceneName: Elite
   bossSceneName: Boss
   eventSceneName: EventScene
@@ -153,3 +153,7 @@ MonoBehaviour:
   restSceneName: Rest
   cardRemoveSceneName: CardRemove
   mapSceneName: Map Scene
+  reachableHighlight: {fileID: 0}
+  floor: 0
+  index: 0
+  children: []

@@ -1,13 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Game.Save;
 
-
+    /*
     // 노드 종류를 정의
     public enum NodeType
     {
         Battle, Elite, Boss, Event, Shop, Rest, CardRemove
     }
+    */
 
     // 이 클래스는 MonoBehaviour를 상속받지 않습니다.
     // 데이터만 담는 설계도
