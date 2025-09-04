@@ -35,7 +35,7 @@ public class ManaBoostGemRelic : Relic
         Debug.Log($"[Relic] {Data.displayName} 제거 → 보정 해제");
     }
 
-    // 현재 스택 수(= 목표 증가량)에 맞춰 차액만큼 반영
+    // 현재 스택 수(= 목표 증가량)에 맞춰 차액만큼 반영함
     private void ApplyOrAdjust()
     {
         var bc = BattleController.instance;
