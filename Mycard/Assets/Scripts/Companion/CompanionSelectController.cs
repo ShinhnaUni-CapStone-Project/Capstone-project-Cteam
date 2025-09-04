@@ -101,6 +101,9 @@ public class CompanionSelectController : MonoBehaviour
         DatabaseManager.Instance.SaveCurrentRun(run, cards, relics, potions,
             nodes: new List<MapNodeState>(), rngStates: new List<RngState>());
 
+        // 3.5. 월렛을 새로운 런에 재바인딩하여 UI와 동기화합니다.
+        ServiceRegistry.Get<IWalletService>()?.RebindRun(runId);
+
         // 4. 맵 씬으로 이동합니다.
         SceneManager.LoadScene(mapScene);
     }
@@ -166,5 +169,8 @@ public class CompanionSelectController : MonoBehaviour
 
         PlayerPrefs.SetString("lastRunId", runId);
         PlayerPrefs.Save();
+
+        // 월렛 재바인딩 (안전)
+        ServiceRegistry.Get<IWalletService>()?.RebindRun(runId);
     }
 }

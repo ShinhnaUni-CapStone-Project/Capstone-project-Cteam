@@ -22,13 +22,25 @@ public sealed class EventManager : IEventManager
     {
         if (_run == null) return null;
 
+        // 1. DB에서 먼저 데이터를 불러옵니다.
         var json = _db.LoadActiveEventSessionJson(_run.RunId);
         if (!string.IsNullOrEmpty(json))
         {
-            try { return JsonUtility.FromJson<EventSessionDTO>(json); }
-            catch (Exception e) { Debug.LogWarning($"[EventManager] 활성 이벤트 JSON 파싱 실패: {e.Message}"); }
+            var dto = JsonUtility.FromJson<EventSessionDTO>(json);
+
+            // 과거 저장본에 설명이 없으면, 원본에서 찾아 보충해줍니다.
+            if (string.IsNullOrEmpty(dto.description) && !string.IsNullOrEmpty(dto.eventId))
+            {
+                var so = Resources.Load<EventScriptableObject>($"Events/{dto.eventId}");
+                if (so != null)
+                {
+                    dto.description = so.description;
+                }
+            }
+            return dto;
         }
 
+        // 2. DB에 데이터가 없으면 새로 생성합니다.
         var eventSO = Resources.Load<EventScriptableObject>($"Events/{eventIdFallback}");
         if (eventSO == null)
         {
@@ -39,7 +51,7 @@ public sealed class EventManager : IEventManager
         var newSession = new EventSessionDTO {
             eventId = eventSO.eventId,
             resolved = false,
-            description = eventSO.description, // ★ 추가: DTO에 텍스트 포함
+            description = eventSO.description, // 새로 만들 때 설명을 채워 넣습니다.
             choices = eventSO.choices.Select(c => new EventChoiceDTO {
                 id = c.id, label = c.label,
                 effects = c.effects.Select(e => new EventEffectDTO { type = e.type, amount = e.amount, refId = e.refId }).ToArray()
@@ -78,8 +90,24 @@ public sealed class EventManager : IEventManager
         // --- 1. 효과 적용 ---
         foreach (var effect in choice.effects)
         {
-            if (effect.type == "HpDelta") _db.UpdateRunHp(_run.RunId, _run.CurrentHp + effect.amount);
-            else if (effect.type == "GoldDelta") _db.UpdateRunGold(_run.RunId, _run.Gold + effect.amount);
+            if (effect.type == "HpDelta")
+            {
+                _db.UpdateRunHp(_run.RunId, _run.CurrentHp + effect.amount);
+            }
+            else if (effect.type == "GoldDelta")
+            {
+                // 지갑 서비스가 있으면 그것을 통해 처리(브로드캐스트 + DB-우선)
+                var wallet = ServiceRegistry.Get<IWalletService>();
+                if (wallet != null)
+                {
+                    wallet.Add(effect.amount);
+                }
+                else
+                {
+                    // 폴백: 기존 DB 직접 업데이트
+                    _db.UpdateRunGold(_run.RunId, _run.Gold + effect.amount);
+                }
+            }
         }
 
         // --- 2. 로컬 런 상태 재동기화 (가장 안전한 방식) ---

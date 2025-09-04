@@ -14,7 +14,7 @@ public class MapTraversalController : MonoBehaviour
     CurrentRun _run;
 
     [SerializeField] private ShopOverlayController _shopOverlay; //상점 오버레이 저장
-    [SerializeField] private string eventSceneName = "EventScene";     // 공통 이벤트 씬 이름
+    [SerializeField] private string eventSceneName = "Scenes/Event";     // 공통 이벤트 씬 이름
     [SerializeField] private string defaultEventId = "GenericEvent01"; // 기본 이벤트 ID
     [SerializeField] private string battleSceneName = "Battle_android"; // 전투 씬의 이름을 에디터에서 설정
 
