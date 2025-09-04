@@ -39,13 +39,13 @@ public class BattleController : MonoBehaviour
     {
         //playerMana = startingMana;
         //UIController.instance.SetPlayerManaText(playerMana);
-
+        
         currentPlayerMaxMana = startingMana;    //마나값을 시작 마나값으로 초기화
 
         FillPlayerMana();   //플레이어 마나를 채운다
 
         DeckController.instance.DrawMulitpleCards(startingcardAmount);  // 시작 카드 수 만큼 뽑기
-
+        
         UIController.instance.setPlayerHealthText(playerHealth);    //플레이어 체력 UI 표기
         UIController.instance.setEnemyHealthText(enemyHealth);  //적 체력 UI 표기
 
@@ -114,6 +114,7 @@ public class BattleController : MonoBehaviour
         enemyMana = currentEnemyMaxMana;
         UIController.instance.SetEnemyManaText(enemyMana);
     }
+
 
     //턴 진행
     public void AdvanceTurn()

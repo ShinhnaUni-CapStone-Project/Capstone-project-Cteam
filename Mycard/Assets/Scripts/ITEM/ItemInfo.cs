@@ -11,7 +11,7 @@ public class ItemInfo : MonoBehaviour
 
     public Image relicSprite;
 
-    public Relic RelictoSpawn;
+    //public Relic RelictoSpawn;
     //cardÂüÁ¶
     void Awake()
     {
@@ -33,7 +33,7 @@ public class ItemInfo : MonoBehaviour
 
     public void setupRelic()
     {
-        relicSprite.sprite = RelicSO.relicSprite;
+        //relicSprite.sprite = RelicSO.relicSprite;
     }
     public void AddRelic()
     {
