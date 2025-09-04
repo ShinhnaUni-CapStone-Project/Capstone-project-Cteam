@@ -20,4 +20,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Battle_android.unity
     guid: 56ec19bee42f78d4ab432c40300d01aa
+  - enabled: 1
+    path: Assets/Scenes/Event.unity
+    guid: 2f36191fe420ef24f8af56c8a8adb58e
   m_configObjects: {}

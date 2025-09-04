@@ -21,15 +21,20 @@ public class ShopOverlayController : MonoBehaviour
         var data = string.IsNullOrEmpty(runId) ? null : DatabaseManager.Instance.LoadCurrentRun(runId);
         _currentRun = data?.Run;
 
-        if (_currentRun != null)
+        // 2. 가능한 경우 WalletService를 통해 골드를 관리합니다. (DB-우선, 브로드캐스트 지원)
+        var wallet = ServiceRegistry.Get<IWalletService>();
+        if (wallet != null)
         {
-            // 2. ShopUI의 '지갑 기능'을 실제 런 데이터와 연결합니다.
+            shopUI.GetGold = () => wallet.Gold;
+            shopUI.SpendGold = (amount) => wallet.TrySpend(amount);
+        }
+        else if (_currentRun != null)
+        {
+            // 폴백: 기존 방식 유지
             shopUI.GetGold = () => _currentRun.Gold;
             shopUI.SpendGold = (amount) => {
                 if (_currentRun == null) return;
                 _currentRun.Gold = Mathf.Max(0, _currentRun.Gold - amount);
-
-                // 골드 업데이트 함수 호출!
                 DatabaseManager.Instance.UpdateRunGold(_currentRun.RunId, _currentRun.Gold);
             };
         }

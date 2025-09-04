@@ -153,3 +153,9 @@ MonoBehaviour:
   restSceneName: Rest
   cardRemoveSceneName: CardRemove
   mapSceneName: Map Scene
+  reachableHighlight: {fileID: 0}
+  floor: 0
+  index: 0
+  children: []
+  assignedScene: 
+  eventIdOverride: GoldenIdolEvent
