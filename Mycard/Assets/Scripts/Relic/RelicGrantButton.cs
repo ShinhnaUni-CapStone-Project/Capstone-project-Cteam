@@ -12,8 +12,8 @@ public class RelicGrantButton : MonoBehaviour
         Relic relic = relicType switch
         {
             "WarBanner" => new WarBannerRelic(relicData),
-            //"HappyFlower" => new HappyFlowerRelic(relicData),
-            //"Anchor" => new AnchorRelic(relicData),
+            "HappyFlower" => new HappyFlowerRelic(relicData),
+            "ManaBoostGem" => new ManaBoostGemRelic(relicData),
             _ => null
         };
         if (relic != null)

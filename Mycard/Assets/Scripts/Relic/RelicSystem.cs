@@ -47,7 +47,14 @@ public class RelicSystem : MonoBehaviour
         GameEvents.ModifyPlayerMana -= ChainModifyPlayerMana;
     }
 
-    public void NotifyStackChanged(Relic r) => relicsUI?.UpdateStacks(r);
+    public void NotifyStackChanged(Relic r)
+    {
+        relicsUI?.UpdateStacks(r);
+        FireRelicsChanged();
+    }
+
+    public event System.Action RelicsChanged; //추가+++
+    private void FireRelicsChanged() => RelicsChanged?.Invoke(); //추가+++
 
     #region Public API
     public void AddRelic(Relic newRelic)
@@ -58,12 +65,14 @@ public class RelicSystem : MonoBehaviour
         {
             existing.AddStack();
             relicsUI?.UpdateStacks(existing); // 스택 텍스트만 갱신
+            FireRelicsChanged();              // <- 추가
             return;
         }
 
         relics.Add(newRelic);
         newRelic.OnAdd();
         relicsUI?.AddOrStack(newRelic);
+        FireRelicsChanged();              // <- 추가
     }
 
     public void RemoveRelic(string relicId)
@@ -73,7 +82,9 @@ public class RelicSystem : MonoBehaviour
         {
             relics[idx].OnRemove();
             relics.RemoveAt(idx);
-            relicsUI?.Refresh(relics);
+            //relicsUI?.Refresh(relics);
+            relicsUI?.Remove(relicId);
+            FireRelicsChanged();              // <- 추가
         }
     }
     #endregion

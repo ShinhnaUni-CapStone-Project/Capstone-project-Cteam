@@ -37,9 +37,10 @@ public class BattleController : MonoBehaviour
     // 첫 프레임 시작 전에 호출
     void Start()
     {
+        GameEvents.OnBattleStart?.Invoke(); // 추가 +++
         //playerMana = startingMana;
         //UIController.instance.SetPlayerManaText(playerMana);
-        
+
         currentPlayerMaxMana = startingMana;    //마나값을 시작 마나값으로 초기화
 
         FillPlayerMana();   //플레이어 마나를 채운다
@@ -90,6 +91,10 @@ public class BattleController : MonoBehaviour
     {
         //playerMana = startingMana;
         playerMana = currentPlayerMaxMana;
+
+        if (GameEvents.ModifyPlayerMana != null)           //추가  +++ 마나 수정 체인 적용
+            playerMana = GameEvents.ModifyPlayerMana(playerMana);  //추가 +++ 마나 수정 체인 적용
+
         UIController.instance.SetPlayerManaText(playerMana);
     }
 
@@ -132,6 +137,7 @@ public class BattleController : MonoBehaviour
             switch (currentPhase)   //턴 단계에 따라 실행
             {
                 case TurnOrder.playerActive:
+                    GameEvents.OnTurnStart?.Invoke(true); // 추가  +++ 플레이어 턴 시작
                     CameraController.instance.MoveTo(CameraController.instance.homeTransform);  //카메라 위치 초기화
                     UIController.instance.endTurnButton.SetActive(true);    // 턴종료 버튼 활성화
                     UIController.instance.drawCardButton.SetActive(true);   //카드 뽑기 버튼 활성화
@@ -156,10 +162,10 @@ public class BattleController : MonoBehaviour
                     break;
 
                 case TurnOrder.enemyActive:
-
+                    GameEvents.OnTurnStart?.Invoke(false); // 추가 +++ 적 턴 시작
                     //Debug.Log("Skipping enemy actions");
                     //AdvanceTurn();
-                    
+
                     if (currentEnemyMaxMana < enemymaxMana)  // 최대마나보다 작으면 플레이어 마나증가 *첫턴은 증가하면 안될텐데*
                     {
                         currentEnemyMaxMana++;
@@ -187,6 +193,8 @@ public class BattleController : MonoBehaviour
     {
         UIController.instance.endTurnButton.SetActive(false);
         UIController.instance.drawCardButton.SetActive(false);
+
+        GameEvents.OnTurnEnd?.Invoke(true);   // 추가 +++ 플레이어 턴 종료
         AdvanceTurn();
     }
 
@@ -196,8 +204,8 @@ public class BattleController : MonoBehaviour
         if (playerHealth > 0 || !battleEnded)
         {
             playerHealth -= damageAmount;
-
-            if(playerHealth <= 0)   //체력이 0이하가 되면 배틀 종료
+            GameEvents.OnDamageDealt?.Invoke(damageAmount, false);  // +++ 적이 준 피해
+            if (playerHealth <= 0)   //체력이 0이하가 되면 배틀 종료
             {
                 playerHealth = 0;
 
@@ -222,7 +230,7 @@ public class BattleController : MonoBehaviour
         if (enemyHealth > 0 || battleEnded == false)
         {
             enemyHealth -= damageAmount;
-
+            GameEvents.OnDamageDealt?.Invoke(damageAmount, true);   // +++ 플레이어가 준 피해
             if (enemyHealth <= 0)
             {
                 enemyHealth = 0;
@@ -244,7 +252,7 @@ public class BattleController : MonoBehaviour
     void EndBattle()
     {
         battleEnded = true;
-
+        GameEvents.OnBattleEnd?.Invoke();      // +++ 전투 종료 알림
         HandController.instance.EmptyHand();    //핸드 제거
 
         if(enemyHealth <= 0)    // 적 체력 0 이하 승리시
