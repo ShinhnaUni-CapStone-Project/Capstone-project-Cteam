@@ -26,17 +26,17 @@ public class GameInitializer : MonoBehaviour
         //    '보관소'에 IDatabase라는 이름으로 등록하여, 다른 전문가들이 찾아 쓸 수 있게 합니다.
         ServiceRegistry.Register<IDatabase>(dbFacade);
 
-        // 3. [조건 확인] '이어하기'할 런(Run)이 있는지 확인합니다.
+        // 3. 러닝 컨텍스트(runId) 확보
+        // 런 ID가 비어있어도, EventManager 내부에서 안전하게 처리할 것입니다.
         var runId = PlayerPrefs.GetString("lastRunId", "");
-        if (!string.IsNullOrEmpty(runId))
-        {
-            // 4. [전문가 생성 및 주입] '이어하기'할 런이 있다면,
-            //    EventManager를 생성하고, 생성자에 '가벽'(dbFacade)과 runId를 '주입'합니다.
-            var eventManager = new EventManager(dbFacade, runId);
-            
-            // 5. [전문가 등록] 완성된 EventManager를 '보관소'에 등록합니다.
-            ServiceRegistry.Register<EventManager>(eventManager);
-        }
+
+        // 4. 월렛(지갑) 서비스 등록: DB-우선 골드 관리 + 브로드캐스트
+        var wallet = new WalletService(dbFacade, runId);
+        ServiceRegistry.Register<IWalletService>(wallet);
+
+        // 5. '이어하기'든 '새 게임'이든 상관없이 항상 EventManager를 등록합니다.
+        var eventManager = new EventManager(dbFacade, runId);
+        ServiceRegistry.Register<IEventManager>(eventManager);
 
         Debug.Log("GameInitializer: 모든 시스템 조립 및 등록이 완료되었습니다.");
     }
