@@ -175,7 +175,7 @@ public class UIController : MonoBehaviour
     
     public void AddRelic()
     {
-        
+        RelicSystem.Instance.AddRelicById("WarBanner", stacks: 1);
     }
 
     public void Pauseup()

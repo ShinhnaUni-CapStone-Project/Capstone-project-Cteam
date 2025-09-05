@@ -170,14 +170,14 @@ PrefabInstance:
     - target: {fileID: 3771161169442518613, guid: 7a8157b04a60c594090f1de013d34594, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 366686313}
+      objectReference: {fileID: 366686314}
     - target: {fileID: 3771161169442518613, guid: 7a8157b04a60c594090f1de013d34594, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: Grant
+      value: AddRelic
       objectReference: {fileID: 0}
     - target: {fileID: 3771161169442518613, guid: 7a8157b04a60c594090f1de013d34594, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: RelicGrantButton, Assembly-CSharp
+      value: UIController, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 3864319518386103243, guid: 7a8157b04a60c594090f1de013d34594, type: 3}
       propertyPath: m_Name
@@ -316,6 +316,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   relicData: {fileID: 11400000, guid: b5e621baf33c38946993465f6c93cc50, type: 2}
   relicType: ManaBoostGem
+--- !u!114 &366686314 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6436457524380690341, guid: 8fd0888bec34fec4abedee699d9710e6, type: 3}
+  m_PrefabInstance: {fileID: 6681031507117419994}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 53256526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ee8719c217d13e4eb54712b96e5b2c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &489429817 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8905744097485562938, guid: 3f4a3af4ca33d5c41a8cd37f708ebe48, type: 3}
