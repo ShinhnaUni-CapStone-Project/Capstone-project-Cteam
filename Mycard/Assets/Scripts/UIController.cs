@@ -97,26 +97,23 @@ public class UIController : MonoBehaviour
 
     public void AddBanana()
     {
-        GameObject bananaObject = new GameObject("BananaItem"); //아이템 오브젝트를 새로 만들어줍니다
-        Banana bananaItem = bananaObject.AddComponent<Banana>(); //아이템 스크립트를 불러와요
-        Inventory.Instance.AddItem(bananaItem);
-        bananaItem.OnAddItem();
+        RelicSystem.Instance.AddRelicById("ManaBoostGem", stacks: 1);
     }
 
     public void AddSword()
     {
-        GameObject SwordObject = new GameObject("SwordItem"); //아이템 오브젝트를 새로 만들어줍니다
+        /*GameObject SwordObject = new GameObject("SwordItem"); //아이템 오브젝트를 새로 만들어줍니다
         Sword SwordItem = SwordObject.AddComponent<Sword>(); //아이템 스크립트를 불러와요
         Inventory.Instance.AddItem(SwordItem);
-        SwordItem.OnAddItem();
+        SwordItem.OnAddItem();*/
     }
 
     public void AddWarBanner()
     {
-        GameObject WarBannerObject = new GameObject("WarBannerItem");
+        /*GameObject WarBannerObject = new GameObject("WarBannerItem");
         WarBanner banner = WarBannerObject.AddComponent<WarBanner>();
         Inventory.Instance.AddItem(banner);
-        banner.OnAddItem();
+        banner.OnAddItem();*/
     }
 
     public void FieldButton()
@@ -124,6 +121,7 @@ public class UIController : MonoBehaviour
         if (FieldBackButton.activeSelf == false)
         {
             CameraController.instance.MoveTo(CameraController.instance.battleTransform);
+            endTurnButton.SetActive(false);
             FieldShowButton.SetActive(false);
             FieldBackButton.SetActive(true);
             EnemyUI.SetActive(false);
@@ -136,6 +134,7 @@ public class UIController : MonoBehaviour
         if (FieldShowButton.activeSelf == false)
         {
             CameraController.instance.MoveTo(CameraController.instance.homeTransform);
+            endTurnButton.SetActive(true);
             FieldBackButton.SetActive(false);
             FieldShowButton.SetActive(true);
 

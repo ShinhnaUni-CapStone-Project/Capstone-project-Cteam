@@ -158,8 +158,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -63, y: 275}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchoredPosition: {x: 6.5, y: 327.59985}
+  m_SizeDelta: {x: 299, y: 135.1998}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &184390754
 MonoBehaviour:
@@ -463,7 +463,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7746783439663235284, guid: 7a8157b04a60c594090f1de013d34594, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -159
+      value: -280
       objectReference: {fileID: 0}
     - target: {fileID: 7746783439663235284, guid: 7a8157b04a60c594090f1de013d34594, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -860,8 +860,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 56, y: 149}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchoredPosition: {x: 6.5, y: 161.5039}
+  m_SizeDelta: {x: 299, y: 75.0077}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1027031036
 MonoBehaviour:
@@ -912,15 +912,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
+  m_fontSize: 67.1
   m_fontSizeBase: 36
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -1046,10 +1046,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
+  m_fontSize: 63.75
   m_fontSizeBase: 24
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
@@ -1265,6 +1265,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7e6af1655e2eec48ace2312bfd54799, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  requiredRngDomains:
+  - deck-shuffle
+  - reward-generation
 --- !u!114 &1525144618
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1316,8 +1319,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 4, y: -64}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchoredPosition: {x: 14.5, y: -111.3397}
+  m_SizeDelta: {x: 255.9, y: 124.6797}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1950082709
 MonoBehaviour:

@@ -53,6 +53,12 @@ public class RelicSystem : MonoBehaviour
         //RelicSystem.Instance.LoadRelics(); //수동으로 불러올 거면 아무 곳에서나 호출.
     }
 
+    public void AttachUI(RelicsUI ui)
+    {
+        relicsUI = ui;
+        relicsUI.Refresh(relics); // 이미 가진 유물들로 UI를 즉시 맞춰줌
+    }
+
     private void OnEnable()
     {
         // 이벤트 구독

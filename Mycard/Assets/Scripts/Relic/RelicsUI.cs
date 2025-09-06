@@ -9,6 +9,12 @@ public class RelicsUI : MonoBehaviour
     [SerializeField] private GameObject iconPrefab;    // Image 들어있는 프리팹
 
     private readonly Dictionary<string, RelicIconUI> map = new();
+    void Awake()
+    {
+        // 씬에 UI가 생기면 RelicSystem에 자신을 붙임
+        if (RelicSystem.Instance != null)
+            RelicSystem.Instance.AttachUI(this);
+    }
 
     public void AddOrStack(Relic relic)     // 신규 추가 또는 스택 증가에 공용
     {
