@@ -41,19 +41,25 @@ public class CardPointsController : MonoBehaviour
 
         for (int i = 0; i < playerCardPoints.Length; i++)
         {
+            var playerCard = (i < playerCardPoints.Length && playerCardPoints[i] != null)
+                ? playerCardPoints[i].activeCard : null;
+            int baseAtk = playerCard?.attackPower ?? 0;
+            int finalAtk = GameEvents.ModifyPlayerAttack?.Invoke(baseAtk) ?? baseAtk;
             if (playerCardPoints[i].activeCard != null) //1번 칸에 있을때
              {
                 if (enemyCardPoints[i].activeCard != null) //적카드포인트도 1번칸에 있을때
                 {
                     //적카드공격
-                    enemyCardPoints[i].activeCard.DamageCard(playerCardPoints[i].activeCard.attackPower);
+                    //enemyCardPoints[i].activeCard.DamageCard(playerCardPoints[i].activeCard.attackPower);
+                    enemyCardPoints[i].activeCard.DamageCard(finalAtk);//추가+++
 
-                   
+
                 }
                 else
                 {
-                    BattleController.instance.DamageEnemy(playerCardPoints[i].activeCard.attackPower); //카드가 없다면 직접공격
+                    //BattleController.instance.DamageEnemy(playerCardPoints[i].activeCard.attackPower); //카드가 없다면 직접공격
                     //적카드전체체력
+                    BattleController.instance.DamageEnemy(finalAtk);//추가+++
                 }
 
                 playerCardPoints[i].activeCard.anim.SetTrigger("Attack");//Attack불러오기
@@ -123,6 +129,7 @@ public class CardPointsController : MonoBehaviour
 
         CheckAssignedCards();
 
+        GameEvents.OnTurnEnd?.Invoke(false);//추가+++
         BattleController.instance.AdvanceTurn();
     }
 

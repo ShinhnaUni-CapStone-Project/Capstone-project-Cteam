@@ -126,6 +126,7 @@ public class Card : MonoBehaviour, IPointerClickHandler
                         bool success = BattleController.instance.AttemptPlayCard(this);
                         if (success)
                         {
+                            GameEvents.OnCardPlayed?.Invoke(this);
                             AudioManager.instance.PlaySFX(4);
 
                             if (assignedPlace.cameraFocusPoint != null)
@@ -290,9 +291,34 @@ public class Card : MonoBehaviour, IPointerClickHandler
     //카드 현 상태 UI 텍스트 설정
     public void UpdateCardDisplay()
     {
+        var shownAtk = GetEffectiveAttack(); //추가+++
+        attackText.text = shownAtk.ToString();//추가+++ 공격력증가
         healthText.text = currentHealth.ToString();
-        attackText.text = attackPower.ToString();
+        //attackText.text = attackPower.ToString(); //기존
         costText.text = manaCost.ToString();
+
+        // (선택) 버프면 초록색 등 시각효과
+        //bool buffed = isPlayer && shownAtk > attackPower;
+        //attackText.color = buffed ? new Color(0.2f, 1f, 0.2f) : Color.white;
+    }
+
+    // 플레이어 카드면 유물 체인을 통과한 "표시용 공격력"을 돌려줌
+    public int GetEffectiveAttack()
+    {
+        if (!isPlayer) return attackPower; // 적 카드는 원래 수치 표시
+        return GameEvents.ModifyPlayerAttack?.Invoke(attackPower) ?? attackPower;
+    }
+
+    private void OnEnable()
+    {
+        if (RelicSystem.Instance != null)
+            RelicSystem.Instance.RelicsChanged += UpdateCardDisplay;
+    }
+
+    private void OnDisable()
+    {
+        if (RelicSystem.Instance != null)
+            RelicSystem.Instance.RelicsChanged -= UpdateCardDisplay;
     }
     /*public void ApplyAttackBuffOutline(bool on)
     {
