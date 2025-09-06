@@ -31,8 +31,10 @@ public class DbCoreTests
             new CardInDeck { InstanceId = $"{runId}-00000002", RunId = runId, CardId = "CARD_DEFEND", IsUpgraded = true  },
         };
 
-        // 3) 저장
-        DatabaseManager.Instance.SaveCurrentRun(
+        // 3) 저장 (세분화된 API 경유 헬퍼)
+        var db = new DatabaseFacade();
+        TestDbHelpers.SaveFullRunSnapshot(
+            db,
             run,
             cards,
             relics: new List<RelicInPossession>(),

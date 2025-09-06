@@ -9,6 +9,15 @@ using Game.Save;
 
 public class DbCoreMoreTests
 {
+    // 공용 DB 핸들(각 테스트 실행 전 초기화)
+    private IDatabase db;
+
+    [SetUp]
+    public void Setup()
+    {
+        DatabaseManager.Instance.Connect();
+        db = new DatabaseFacade();
+    }
     // 1) 모든 엔터티(카드/유물/포션/노드/RNG) 저장→로드 검증
     [Test]
     public void SaveLoad_AllEntities_Roundtrip()
@@ -53,7 +62,7 @@ public class DbCoreMoreTests
             new RngState { RunId=runId, Domain="shop",   Seed=5678, StateA=4, StateB=5, Step=6 }
         };
 
-        DatabaseManager.Instance.SaveCurrentRun(run, cards, relics, pots, nodes, rngs);
+        TestDbHelpers.SaveFullRunSnapshot(db, run, cards, relics, pots, nodes, rngs);
 
         var loaded = DatabaseManager.Instance.LoadCurrentRun(runId);
         Assert.NotNull(loaded);
@@ -86,8 +95,9 @@ public class DbCoreMoreTests
             new CardInDeck { InstanceId=$"{runId}-00000001", RunId=runId, CardId="CARD_A", IsUpgraded=false }
         };
 
+
         // 1차 저장
-        DatabaseManager.Instance.SaveCurrentRun(run, cards,
+        TestDbHelpers.SaveFullRunSnapshot(db, run, cards,
             relics: new List<RelicInPossession>(),
             potions: new List<PotionInPossession>(),
             nodes: new List<MapNodeState>(),
@@ -97,7 +107,7 @@ public class DbCoreMoreTests
         run.Gold = 77;
         cards.Add(new CardInDeck { InstanceId=$"{runId}-00000002", RunId=runId, CardId="CARD_B", IsUpgraded=true });
 
-        DatabaseManager.Instance.SaveCurrentRun(run, cards,
+        TestDbHelpers.SaveFullRunSnapshot(db, run, cards,
             relics: new List<RelicInPossession>(),
             potions: new List<PotionInPossession>(),
             nodes: new List<MapNodeState>(),
@@ -126,7 +136,7 @@ public class DbCoreMoreTests
             ContentCatalogVersion="42", AppVersion=Application.version
         };
 
-        DatabaseManager.Instance.SaveCurrentRun(run,
+        TestDbHelpers.SaveFullRunSnapshot(db, run,
             cards: new List<CardInDeck>(),
             relics: new List<RelicInPossession>(),
             potions: new List<PotionInPossession>(),
@@ -154,7 +164,7 @@ public class DbCoreMoreTests
             ContentCatalogVersion="42", AppVersion=Application.version
         };
 
-        DatabaseManager.Instance.SaveCurrentRun(run,
+        TestDbHelpers.SaveFullRunSnapshot(db, run,
             cards: new List<CardInDeck>(),
             relics: new List<RelicInPossession>(),
             potions: new List<PotionInPossession>(),
@@ -189,7 +199,7 @@ public class DbCoreMoreTests
             new CardInDeck { InstanceId=$"{runId}-0000000A", RunId=runId, CardId="CARD_B", IsUpgraded=false }, // HEX 10
         };
 
-        DatabaseManager.Instance.SaveCurrentRun(run, cards,
+        TestDbHelpers.SaveFullRunSnapshot(db, run, cards,
             relics: new List<RelicInPossession>(),
             potions: new List<PotionInPossession>(),
             nodes: new List<MapNodeState>(),

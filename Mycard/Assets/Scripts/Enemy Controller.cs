@@ -1,9 +1,9 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class EnemyController : MonoBehaviour
-{   //Ä«µå¸¦ ¹èÄ¡ÇÏ´Â ¾Ë°í¸®ÁòÀÌ µé¾î°¡ ÀÖÀ½
+{   //ì¹´ë“œë¥¼ ë°°ì¹˜í•˜ëŠ” ì•Œê³ ë¦¬ì¦˜ì´ ë“¤ì–´ê°€ ìˆìŒ
     public static EnemyController instance;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     private void Awake()
@@ -49,7 +49,7 @@ public class EnemyController : MonoBehaviour
         {
             int selected = Random.Range(0, tempDeck.Count);
             activeCards.Add(tempDeck[selected]);
-            tempDeck.RemoveAt(selected); //¼±ÅÃµÇÁö ¾ÊÀº activecard °ªÀ» ÁÙ¿©ÁØ´Ù.
+            tempDeck.RemoveAt(selected); //ì„ íƒë˜ì§€ ì•Šì€ activecard ê°’ì„ ì¤„ì—¬ì¤€ë‹¤.
             interations++;
         }
     }
@@ -112,7 +112,7 @@ public class EnemyController : MonoBehaviour
         {
             cardPoints.Remove(selectedPoint);
 
-            while (selectedPoint.activeCard != null && cardPoints.Count > 0) //Ä«µå¸¦ ·£´ı Æ÷ÀÎÆ®¿¡ ¹èÄ¡ Ä«µå°¡ ÀÖ´Ù¸é
+            while (selectedPoint.activeCard != null && cardPoints.Count > 0) //ì¹´ë“œë¥¼ ëœë¤ í¬ì¸íŠ¸ì— ë°°ì¹˜ ì¹´ë“œê°€ ìˆë‹¤ë©´
             {
                 randomPoint = Random.Range(0, cardPoints.Count);
                 selectedPoint = cardPoints[randomPoint];

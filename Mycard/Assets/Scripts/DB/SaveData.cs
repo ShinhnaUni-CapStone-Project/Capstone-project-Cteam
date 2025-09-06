@@ -210,6 +210,51 @@ namespace Game.Save
         public long Step { get; set; }               // 몇 번째 랜덤 숫자를 생성할 차례인지.
     }
 
+    /// <summary>
+    /// 개별 카드의 런타임 상태를 DB에 저장하기 위한 클래스입니다.
+    /// 모든 덱 관련 로직의 '단일 진실 공급원(SSoT)' 역할을 합니다.
+    /// </summary>
+    [Table("CardRuntimeState")]
+    public class CardRuntimeState
+    {
+        /// <summary>
+        /// 카드의 전역 고유 식별자(PK)입니다.
+        /// 백필 시에는 기존 CardInDeck.InstanceId를 그대로 사용하며, 신규 생성 시에는 별도 규칙에 따라 생성됩니다.
+        /// </summary>
+        [PrimaryKey]
+        public string InstanceId { get; set; }
+
+        /// <summary>
+        /// 이 카드가 소속된 런(Run)의 ID입니다.
+        /// </summary>
+        [Indexed]
+        public string RunId { get; set; }
+
+        /// <summary>
+        /// 이 카드의 종류를 나타내는 ID입니다. (예: "CARD_STRIKE", "CARD_DEFEND")
+        /// 주의: 이 값은 원본 데이터와 항상 동기화되어야 하는 불변 규칙을 가집니다.
+        /// </summary>
+        [Indexed]
+        public string CardId { get; set; }
+
+        /// <summary>
+        /// 카드가 현재 위치한 더미(장소)입니다.
+        /// </summary>
+        public CardLocation Location { get; set; }
+
+        /// <summary>
+        /// 더미 내에서의 순서를 나타냅니다.
+        /// 규칙: 숫자가 클수록 더미의 맨 위(Top)에 위치합니다.
+        /// </summary>
+        public int OrderInPile { get; set; }
+
+        /// <summary>
+        /// 카드 강화, 비용 변화 등 추가적인 상태 변화를 저장하는 JSON 문자열입니다.
+        /// 규칙: Null 대신 항상 빈 문자열(string.Empty)을 사용합니다.
+        /// </summary>
+        public string ModifiersJson { get; set; } = string.Empty;
+    }
+
     //상점 세이브 스컴 방지용 db 저장
     [Table("ActiveShopSession")]
     public class ActiveShopSession

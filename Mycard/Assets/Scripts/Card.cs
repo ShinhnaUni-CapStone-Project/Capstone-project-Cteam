@@ -3,8 +3,9 @@ using TMPro;
 using UnityEngine.UI;
 using Unity.VisualScripting;
 using DG.Tweening;
+using UnityEngine.EventSystems;
 
-public class Card : MonoBehaviour
+public class Card : MonoBehaviour, IPointerClickHandler
 {
     public CardScriptableObject cardSO; //카드 설계도
 
@@ -39,6 +40,11 @@ public class Card : MonoBehaviour
     public Animator anim;// 카드 애니메이션
 
     public LayerMask whatIsDesktop, whatIsPlacement;    //카드 내려놓을 레이어
+
+    // 서비스 경로: 런타임 식별자와 서비스 참조
+    public string InstanceId { get; private set; }
+    private IDeckService _deckService;
+    private bool _isInteractable = true;
 
     void Awake()
     {
@@ -87,7 +93,8 @@ public class Card : MonoBehaviour
         transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, rotateSpeed * Time.deltaTime);
 
         //카드가 선택되고 배틀이 진행중이라면 Y축 2 증가해서 든다
-        if (isSelected && !BattleController.instance.battleEnded && Time.timeScale != 0f)
+        // 손에 들고 있는(inHand) 카드일 때만 선택/배치 루프 실행
+        if (isSelected && inHand && !BattleController.instance.battleEnded && Time.timeScale != 0f)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
@@ -109,28 +116,40 @@ public class Card : MonoBehaviour
 
                     if (selectedPoint.activeCard == null && selectedPoint.isPlayerPoint)
                     {
-                        if (BattleController.instance.playerMana >= manaCost)
+                        // 1) 보드 배치 상태를 먼저 표기하여 OnCardPlayed 이벤트 처리 시 풀반납을 방지
+                        selectedPoint.activeCard = this;
+                        assignedPlace = selectedPoint;
+                        inHand = false;
+                        isSelected = false;
+
+                        // 2) 서비스 경로 일원화: BattleController 관문을 통해 사용 시도
+                        bool success = BattleController.instance.AttemptPlayCard(this);
+                        if (success)
                         {
-                            selectedPoint.activeCard = this;
-                            assignedPlace = selectedPoint;
-                            inHand = false;
-                            isSelected = false;
-                            theHC.RemoveCardFromHand(this);
-                            BattleController.instance.SpendPlayerMana(manaCost);
                             AudioManager.instance.PlaySFX(4);
 
                             if (assignedPlace.cameraFocusPoint != null)
                                 CameraController.instance.MoveTo(assignedPlace.cameraFocusPoint);
-                           
 
+                            // 보드 컨테이너로 부모 변경(핸드 재정렬의 간섭 차단)
+                            transform.SetParent(selectedPoint.transform, true);
                             MoveToPoint(selectedPoint.transform.position, transform.rotation);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                            Debug.Log($"[Card] Placed: instance={InstanceId}, parent={(transform.parent != null ? transform.parent.name : "<none>")}, pos={transform.position}");
+#endif
+
+                            // 보드에 올라간 카드는 상호작용을 끈다(재선택/우클릭 방지)
+                            SetInteractable(false);
 
                             CameraController.instance.MoveTo(CameraController.instance.homeTransform);  // 카메라를 다시 기본 시점으로
                         }
-                        else //마나 부족
+                        else
                         {
+                            // 3) 실패 시 원복 및 손으로 복귀(경고는 AttemptPlayCard에서 표시됨)
+                            selectedPoint.activeCard = null;
+                            assignedPlace = null;
+                            inHand = true;
                             ReturnToHand();
-                            UIController.instance.ShowManaWarning();
                         }
                     }
                     else // 놓을 빈칸이 아니라면
@@ -148,19 +167,64 @@ public class Card : MonoBehaviour
         justPressed = false;    // 다음 클릭 준비
     }
 
-    //카드 좌클릭 선택시 카메라를 필드뷰로 이동
-    private void OnMouseDown()
+    // UI 이벤트 시스템 클릭 처리: 카드 선택 전용(사용은 배치 시 BattleController 경유)
+    public void OnPointerClick(PointerEventData eventData)
     {
-        if (inHand && BattleController.instance.currentPhase == BattleController.TurnOrder.playerActive
-            && isPlayer && !BattleController.instance.battleEnded && Time.timeScale != 0f)
-        {
-            isSelected = true;
-            theCol.enabled = false;
-            justPressed = true;
+        // 이미 손을 떠난 카드(보드 배치/사용 중)는 클릭 무시
+        if (!_isInteractable || !inHand || assignedPlace != null) return;
 
-            // 카드 선택 시 카메라 클로즈업
+        // 즉시 소프트 체크: 지금 이 카드를 사용할 수 없는 상태면 경고만 표시하고 선택/카메라 전환을 막는다
+        var bc = BattleController.instance;
+        if (bc != null)
+        {
+            var playable = bc.EvaluatePlayability(this);
+            if (playable != BattleController.Playability.Ok)
+            {
+                UIController.instance?.ShowManaWarning();
+                return;
+            }
+        }
+        // 클릭 시 즉시 사용(Discard)하지 않고 '선택' 상태로 전환하여 드래그/배치를 유도합니다.
+        // 기존 드래그/배치 로직(Update 내 Raycast 처리)을 통해 사용 여부를 결정합니다.
+        isSelected = true;
+        justPressed = true; // 중복 클릭 방지 플래그 유지
+
+        // 전장 뷰로 카메라 이동만 수행(버튼 UI 토글은 건드리지 않음)
+        if (CameraController.instance != null && CameraController.instance.battleTransform != null)
+        {
             CameraController.instance.MoveTo(CameraController.instance.battleTransform);
         }
+        else
+        {
+            Debug.LogWarning("[Card] 카메라 이동 불가: CameraController 초기화 전", this);
+        }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[Card] Click select: instance={InstanceId}, go={name}, parent={(transform.parent != null ? transform.parent.name : "<none>")}, layer={gameObject.layer}, active={gameObject.activeSelf}");
+        Debug.Log($"[Card] Click camera move done: instance={InstanceId}");
+#endif
+    }
+
+    // 서비스/식별자/데이터를 주입하는 초기화 진입점
+    public void Initialize(string instanceId, CardScriptableObject so, IDeckService deckService)
+    {
+        if (string.IsNullOrEmpty(instanceId) || so == null || deckService == null)
+        {
+            Debug.LogError($"[Card] Initialize 실패: id={instanceId}, so={(so==null?"null":so.name)}, svc={(deckService==null?"null":"ok")}", this);
+            gameObject.SetActive(false);
+            return;
+        }
+        InstanceId = instanceId;
+        cardSO = so;
+        _deckService = deckService;
+        SetupCard();
+        SetInteractable(true);
+    }
+
+    public void SetInteractable(bool value)
+    {
+        _isInteractable = value;
+        if (theCol != null) theCol.enabled = value;
     }
 
     //카드 위에 마우스가 있을시 1프레임 띄워서 보여줌
@@ -196,6 +260,9 @@ public class Card : MonoBehaviour
 
         // 카드 반납 시 카메라 원위치
         CameraController.instance.MoveTo(CameraController.instance.homeTransform);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[Card] ReturnToHand: instance={InstanceId}, handPos={handPosition}");
+#endif
     }
 
     //다른 카드로 부터 데미지를 받을때

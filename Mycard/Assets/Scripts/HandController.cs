@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -47,7 +47,7 @@ public class HandController : MonoBehaviour
             //heldCards[i].transform.position = cardPositions[i];
             //heldCards[i].transform.rotation = minpos.rotation;
             
-            //ī�尡 �����̸� ���˴ϴ�
+            //카드가 움직이면 사용됩니다
             heldCards[i].MoveToPoint(cardPositions[i], minpos.rotation);
 
             heldCards[i].inHand = true;
@@ -58,22 +58,43 @@ public class HandController : MonoBehaviour
 
     public void RemoveCardFromHand(Card cardToRemove)
     {
-        if (heldCards[cardToRemove.handPosition] == cardToRemove)
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        int before = heldCards.Count;
+        Debug.Log($"[HandController] RemoveCardFromHand begin: target={(cardToRemove!=null?cardToRemove.name:"<null>")}, instance={(cardToRemove!=null?cardToRemove.InstanceId:"<null>")}, beforeCount={before}");
+#endif
+        // 우선 위치 인덱스 기반 제거 시도
+        if (cardToRemove != null && cardToRemove.handPosition >= 0 && cardToRemove.handPosition < heldCards.Count && heldCards[cardToRemove.handPosition] == cardToRemove)
         {
             heldCards.RemoveAt(cardToRemove.handPosition);
-        } else
+        }
+        else
         {
-            Debug.LogError("Card at position" + cardToRemove.handPosition + "is not the card being removed from hand");
-
+            // 인덱스가 불일치할 수 있으므로 안전하게 객체 기반 제거를 시도한다.
+            int idx = heldCards.IndexOf(cardToRemove);
+            if (idx >= 0)
+            {
+                heldCards.RemoveAt(idx);
+            }
+            else
+            {
+                Debug.LogError("Card at position" + (cardToRemove!=null?cardToRemove.handPosition:-1) + " is not the card being removed from hand");
+            }
         }
 
         SetCardPositionsInHand();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        int after = heldCards.Count;
+        Debug.Log($"[HandController] RemoveCardFromHand end: afterCount={after}");
+#endif
     }
 
     public void AddCardToHand(Card cardToAdd)
     {
         heldCards.Add(cardToAdd);
         SetCardPositionsInHand() ;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[HandController] AddCardToHand: added={(cardToAdd!=null?cardToAdd.name:"<null>")}, instance={(cardToAdd!=null?cardToAdd.InstanceId:"<null>")}, count={heldCards.Count}");
+#endif
     }
 
     public void EmptyHand()
