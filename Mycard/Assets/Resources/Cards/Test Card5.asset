@@ -13,13 +13,11 @@ MonoBehaviour:
   m_Name: Test Card5
   m_EditorClassIdentifier: 
   cardName: test5
-  CardId: 5
-  cardType: 0
-  damageType: 0
+  CardId: CARD_5
   actionDescription: 
   cardLore: 
   currentHealth: 2
   attackPower: 1
   manaCost: 1
-  characterSprite: {fileID: 0}
-  bgSprite: {fileID: 0}
+  characterSprite: {fileID: 21300000, guid: 19389f997bd5d89478b48f14f089f785, type: 3}
+  bgSprite: {fileID: 21300000, guid: 91f263c4e2d827c4fa3cb47b7369c9bf, type: 3}

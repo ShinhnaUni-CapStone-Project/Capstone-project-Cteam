@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,9 +7,9 @@ public class CardScriptableObject : ScriptableObject
 {
 
     public string cardName;
-    public string CardId; //Id Ä«µå °íÀ¯ Id
-    //public CardType cardType; //Ãß°¡1
-    //public DamageType damageType;//Ãß°¡2
+    public string CardId; //Id ì¹´ë“œ ê³ ìœ  Id
+    //public CardType cardType; //ì¶”ê°€1
+    //public DamageType damageType;//ì¶”ê°€2
 
     [TextArea]
     public string actionDescription, cardLore;
@@ -19,7 +19,7 @@ public class CardScriptableObject : ScriptableObject
     public Sprite characterSprite, bgSprite;
 
     /*
-    public enum CardType //Ãß°¡1
+    public enum CardType //ì¶”ê°€1
     {
         Fire,
         Ice,
@@ -29,7 +29,7 @@ public class CardScriptableObject : ScriptableObject
         Dark
 
     }
-    public enum DamageType //Ãß°¡2
+    public enum DamageType //ì¶”ê°€2
     {
         Fire,
         Ice,

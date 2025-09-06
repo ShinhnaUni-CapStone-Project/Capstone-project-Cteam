@@ -13,9 +13,7 @@ MonoBehaviour:
   m_Name: Test Card4
   m_EditorClassIdentifier: 
   cardName: test4
-  CardId: 4
-  cardType: 0
-  damageType: 0
+  CardId: CARD_4
   actionDescription: 
   cardLore: 
   currentHealth: 1

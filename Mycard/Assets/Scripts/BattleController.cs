@@ -1,15 +1,59 @@
 ﻿using System.Collections;
 using UnityEngine;
 
+// Phase 2: 조립 책임자 역할 부여. 다른 컨트롤러보다 먼저 실행되도록 우선순위 부여
+[DefaultExecutionOrder(-9000)]
 public class BattleController : MonoBehaviour
 {
 
     public static BattleController instance;
 
+    [Header("Dependencies")]
+
+    [Header("전투 규칙 설정")]
+    [SerializeField] private int _initialHandCount = 5;
+    [SerializeField] private int _handLimit = 10;
+    [SerializeField] private int _drawCardCost = 2; // 드로우 버튼 비용
+
+    // Phase 2 준비: 서비스 주입(전투 흐름에서 IDeckService 사용 예정)
+    private IDeckService _deckService;
+    private bool _isInitialized;
+    private bool _battleStarted;
+    private bool _isAdvancingTurn = false; // 중복 턴 진행 방지
+
     // 이 스크립트가 생성될 때 instance에 자기 자신 할당
     private void Awake()
     {
         instance = this;
+
+        // --- 부트스트래핑: 필수 서비스 주입 ---
+        // GameInitializer(-10000)에서 등록 완료됨
+        var deckService = ServiceRegistry.Get<IDeckService>();
+        if (deckService != null)
+        {
+            try { Initialize(deckService); }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[BattleController] Initialize(deckService) 실패: {e.Message}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[BattleController] IDeckService를 찾지 못했습니다. 추후 단계에서 연결 예정.");
+        }
+    }
+
+    /// <summary>
+    /// Bootstrap/초기화 시점에 IDeckService를 주입받습니다. (향후 전투 시작/턴 흐름에서 사용)
+    /// </summary>
+    public void Initialize(IDeckService deckService)
+    {
+        _deckService = deckService;
+        if (_deckService != null)
+        {
+            _deckService.SetHandLimit(_handLimit);
+            _isInitialized = true;
+        }
     }
 
     // --- 전투 기본 설정 변수들 ---
@@ -45,7 +89,7 @@ public class BattleController : MonoBehaviour
 
         FillPlayerMana();   //플레이어 마나를 채운다
 
-        DeckController.instance.DrawMulitpleCards(startingcardAmount);  // 시작 카드 수 만큼 뽑기
+        // 초기 드로우는 BattleSceneBootstrap -> StartBattle() 경로에서 처리됩니다.
         
         UIController.instance.setPlayerHealthText(playerHealth);    //플레이어 체력 UI 표기
         UIController.instance.setEnemyHealthText(enemyHealth);  //적 체력 UI 표기
@@ -124,6 +168,8 @@ public class BattleController : MonoBehaviour
     //턴 진행
     public void AdvanceTurn()
     {
+        if (_isAdvancingTurn) return;
+        _isAdvancingTurn = true;
         if (battleEnded == false)   //배틀이 끝나지 않았을때
         {
             currentPhase++;
@@ -149,9 +195,12 @@ public class BattleController : MonoBehaviour
 
                     FillPlayerMana();   //마나를 가득 채움
 
-                    DeckController.instance.DrawMulitpleCards(cardToDrawPerTurn);   //정해준 변수만큼 카드 드로우
-
-                    break;
+                    if (_isInitialized && _deckService != null)
+                        _deckService.DrawCards(cardToDrawPerTurn, DrawReason.TurnStart);
+                    else
+                        Debug.LogWarning("[BattleController] IDeckService 미초기화 상태로 드로우를 건너뜁니다.");
+            
+            break;
 
                 case TurnOrder.playerCardAttacks:   //플레이어 공격
 
@@ -187,6 +236,7 @@ public class BattleController : MonoBehaviour
 
             }
         }
+        _isAdvancingTurn = false;
     }
 
     public void EndPlayerTurn() //턴 종료 눌리면 버튼 비활성화 하고 턴 진행
@@ -196,6 +246,120 @@ public class BattleController : MonoBehaviour
 
         GameEvents.OnTurnEnd?.Invoke(true);   // 추가 +++ 플레이어 턴 종료
         AdvanceTurn();
+    }
+
+    /// <summary>
+    /// 카드 사용을 시도하는 중앙 관문. 규칙 검사 후 성공 시 마나 차감과 덱 서비스 호출을 수행합니다.
+    /// </summary>
+    public bool AttemptPlayCard(Card card)
+    {
+        if (battleEnded) return false;
+        if (!_isInitialized || _deckService == null)
+        {
+            Debug.LogError("[BattleController] AttemptPlayCard 실패: IDeckService가 초기화되지 않았습니다.");
+            return false;
+        }
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[BattleController] AttemptPlayCard: instance={(card!=null?card.InstanceId:"<null>")}, mana={playerMana}/{playermaxMana}, phase={currentPhase}");
+#endif
+        if (currentPhase != TurnOrder.playerActive)
+        {
+            Debug.LogWarning("[BattleController] 플레이어 턴이 아니므로 카드를 사용할 수 없습니다.");
+            return false;
+        }
+        if (card == null)
+        {
+            Debug.LogWarning("[BattleController] AttemptPlayCard: card가 null 입니다.");
+            return false;
+        }
+        if (playerMana < card.manaCost)
+        {
+            UIController.instance?.ShowManaWarning();
+            return false;
+        }
+
+        // 규칙 통과: 마나 차감 후 서비스에 사용 통보
+        SpendPlayerMana(card.manaCost);
+        var result = _deckService.PlayCard(card.InstanceId);
+        if (result == null || result.Code != PlayResult.ResultCode.Success)
+        {
+            Debug.LogWarning($"[BattleController] PlayCard 실패: {(result==null?"null":result.Code.ToString())}");
+            return false;
+        }
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[BattleController] PlayCard success: instance={card.InstanceId}");
+#endif
+        return true;
+    }
+
+    // --------- 소프트 체크(부작용 없음) ---------
+    public enum Playability { Ok, NotPlayerTurn, NotEnoughMana }
+
+    public Playability EvaluatePlayability(Card card)
+    {
+        if (battleEnded) return Playability.NotPlayerTurn;
+        if (currentPhase != TurnOrder.playerActive)
+            return Playability.NotPlayerTurn;
+        if (card == null) return Playability.NotEnoughMana;
+        if (playerMana < card.manaCost)
+            return Playability.NotEnoughMana;
+        return Playability.Ok;
+    }
+
+    /// <summary>
+    /// 플레이어가 드로우 버튼을 눌렀을 때, 마나 규칙을 검사하고 드로우를 시도합니다.
+    /// </summary>
+    public void AttemptPlayerDraw()
+    {
+        if (battleEnded) return;
+        if (!_isInitialized || _deckService == null)
+        {
+            Debug.LogError("[BattleController] AttemptPlayerDraw 실패: IDeckService가 초기화되지 않았습니다.");
+            return;
+        }
+        if (currentPhase != TurnOrder.playerActive)
+        {
+            Debug.LogWarning("[BattleController] 플레이어 턴이 아니므로 드로우할 수 없습니다.");
+            return;
+        }
+
+        if (playerMana >= _drawCardCost)
+        {
+            SpendPlayerMana(_drawCardCost);
+            _deckService.DrawCards(1, DrawReason.CardEffect);
+        }
+        else
+        {
+            UIController.instance.ShowManaWarning();
+            UIController.instance.drawCardButton.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// 전투 시작: 초기 패 드로우를 서비스 경로로 수행합니다(중복 방지 포함).
+    /// </summary>
+    public void StartBattle()
+    {
+        if (!_isInitialized)
+            throw new System.InvalidOperationException("[BattleController] 서비스가 초기화되지 않았습니다. Bootstrap을 확인하세요.");
+
+        if (_battleStarted)
+        {
+            Debug.LogWarning("[BattleController] StartBattle이 중복 호출되었습니다.");
+            return;
+        }
+        _battleStarted = true;
+
+        Debug.Log("[BattleController] 전투 시작! 초기 드로우를 요청합니다.");
+        try
+        {
+            _deckService.SetHandLimit(_handLimit);
+            _deckService.DrawCards(_initialHandCount, DrawReason.TurnStart);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[BattleController] 초기 드로우 실패: {e.Message}");
+        }
     }
 
     //플레이어에게 데미지를 주는 함수

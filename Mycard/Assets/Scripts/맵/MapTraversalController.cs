@@ -12,6 +12,7 @@ public class MapTraversalController : MonoBehaviour
     Dictionary<(int floor, int index), NodeGoScene> _nodes;
     string _runId;
     CurrentRun _run;
+    private bool _isMoving = false; // 노드 이동 중 재진입 방지
 
     [SerializeField] private ShopOverlayController _shopOverlay; //상점 오버레이 저장
     [SerializeField] private string eventSceneName = "Scenes/Event";     // 공통 이벤트 씬 이름
@@ -50,6 +51,10 @@ public class MapTraversalController : MonoBehaviour
 
     public void OnNodeClicked(NodeGoScene target)
     {
+        if (_isMoving) return;
+        _isMoving = true;
+        try
+        {
         // [디버그 1] 함수 시작: 어떤 노드가 클릭되었는지 기록
         Debug.Log($"--- OnNodeClicked --- Target: ({target.floor},{target.index}), Type: {target.nodeType}");
 
@@ -104,12 +109,9 @@ public class MapTraversalController : MonoBehaviour
                 Type = (Game.Save.NodeType)target.nodeType, Visited = true
             };
             
-            DatabaseManager.Instance.SaveCurrentRun(
-                _run,
-                cards:null, relics:null, potions:null,
-                nodes:new List<MapNodeState>{ visited },
-                rngStates:null
-            );
+            var db = ServiceRegistry.GetRequired<IDatabase>();
+            db.UpsertNodeState(visited);
+            db.UpdateRunPosition(_run.RunId, _run.Act, _run.Floor, _run.NodeIndex);
 
             PlaceMarker(target.floor, target.index);
             UpdateReachable(target.floor, target.index);
@@ -179,8 +181,17 @@ public class MapTraversalController : MonoBehaviour
         }
         else
         {
-        // 어떤 조건에도 해당하지 않음
-        Debug.Log("<color=orange>WARNING: No action taken. isMoveToChild was false for a non-shop/event node.</color>");
+            // 어떤 조건에도 해당하지 않음
+            Debug.Log("<color=orange>WARNING: No action taken. isMoveToChild was false for a non-shop/event node.</color>");
+        }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[MapTraversalController] 노드 이동 처리 중 오류: {e.Message}");
+        }
+        finally
+        {
+            _isMoving = false;
         }
     }
 

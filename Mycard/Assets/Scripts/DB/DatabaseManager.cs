@@ -84,12 +84,33 @@ public sealed class DatabaseManager
         // ==== '이어하기'용 테이블 생성 ====
         _conn.CreateTable<CurrentRun>();
         _conn.CreateTable<CardInDeck>();
+        _conn.CreateTable<CardRuntimeState>();
         _conn.CreateTable<RelicInPossession>();
         _conn.CreateTable<PotionInPossession>();
         _conn.CreateTable<MapNodeState>();
         _conn.CreateTable<RngState>();
         _conn.CreateTable<ActiveShopSession>(); //db 상점
         _conn.CreateTable<ActiveEventSession>(); //db 이벤트
+
+        // ==== CardRuntimeState 핵심 인덱스 생성 ====
+        try
+        {
+            // 특정 런의 특정 더미를 Top 우선으로 빠르게 조회하기 위한 인덱스
+            _conn.Execute(
+                "CREATE INDEX IF NOT EXISTS IX_CardRuntimeState_Query " +
+                "ON CardRuntimeState (RunId, Location, OrderInPile DESC)"
+            );
+
+            // 런 내 카드 타입 집계를 위한 보조 인덱스
+            _conn.Execute(
+                "CREATE INDEX IF NOT EXISTS IX_CardRuntimeState_Type_Count " +
+                "ON CardRuntimeState (RunId, CardId)"
+            );
+        }
+        catch (SQLiteException e)
+        {
+            Debug.LogWarning($"[DB] CardRuntimeState 인덱스 생성 경고: {e.Message}");
+        }
     }
 
     /// <summary>
@@ -178,46 +199,34 @@ public sealed class DatabaseManager
         BackupDatabaseAtomic();
     }
 
+    // --- 런 메타(현재 위치/기본 정보) 업데이트 ---
+    public void UpsertCurrentRun(CurrentRun run)
+    {
+        if (run == null || string.IsNullOrEmpty(run.RunId))
+            throw new ArgumentException("UpsertCurrentRun: invalid run");
+        run.UpdatedAtUtc = DateTime.UtcNow.ToString("o");
+        InTx(conn => conn.InsertOrReplace(run));
+    }
+
+    public void UpdateRunPosition(string runId, int act, int floor, int nodeIndex)
+    {
+        if (string.IsNullOrEmpty(runId)) return;
+        var run = _conn.Find<CurrentRun>(runId);
+        if (run == null) return;
+        run.Act = act;
+        run.Floor = floor;
+        run.NodeIndex = nodeIndex;
+        run.UpdatedAtUtc = DateTime.UtcNow.ToString("o");
+        _conn.Update(run);
+    }
+
     // ... (AddUnlockedCard, AddUnlockedRelic 등 다른 영구 데이터 저장 함수들) ...
 
     // ==========================================================
     // 3) 현재 런 (일시 저장) 관련 함수들
     // ==========================================================
 
-    /// <summary>
-    /// '이어하기'를 위해 현재 게임의 모든 상태를 저장합니다.
-    /// </summary>
-    public void SaveCurrentRun(
-        CurrentRun run,
-        IList<CardInDeck> cards,
-        IList<RelicInPossession> relics,
-        IList<PotionInPossession> potions,
-        IList<MapNodeState> nodes,
-        IList<RngState> rngStates)
-    {
-        run.UpdatedAtUtc = DateTime.UtcNow.ToString("o"); // 마지막 저장 시각 갱신
-
-        InTx(conn =>
-        {
-            // 덮어쓰기를 위해, 이 RunId에 해당하는 기존 데이터를 모두 깨끗이 지웁니다.
-            conn.Table<CardInDeck>().Delete(x => x.RunId == run.RunId);
-            conn.Table<RelicInPossession>().Delete(x => x.RunId == run.RunId);
-            conn.Table<PotionInPossession>().Delete(x => x.RunId == run.RunId);
-            conn.Table<MapNodeState>().Delete(x => x.RunId == run.RunId);
-            conn.Table<RngState>().Delete(x => x.RunId == run.RunId);
-
-            // 새로운 데이터들을 삽입합니다.
-            conn.InsertOrReplace(run);
-            if (cards != null) conn.InsertAll(cards);
-            if (relics != null) conn.InsertAll(relics);
-            if (potions != null) conn.InsertAll(potions);
-            if (nodes != null) conn.InsertAll(nodes);
-            if (rngStates != null) conn.InsertAll(rngStates);
-        });
-
-        BackupDatabaseAtomic();
-        Debug.Log($"[DB] 현재 런 저장 완료: {run.RunId}");
-    }
+    // SaveCurrentRun legacy API는 제거되었고, 세분화된 API로 대체되었습니다.
 
     /// <summary>
     /// 저장된 '이어하기' 데이터를 불러옵니다.
@@ -391,6 +400,40 @@ public sealed class DatabaseManager
         _conn.InsertOrReplace(node);
     }
 
+    // --- 레거시 덱(CardInDeck)/유물/포션 교체 저장 (런 생성 시에만 사용) ---
+    public void ReplaceCardsInDeck(string runId, System.Collections.Generic.IEnumerable<CardInDeck> cards)
+    {
+        if (string.IsNullOrEmpty(runId)) return;
+        var list = cards?.ToList() ?? new System.Collections.Generic.List<CardInDeck>();
+        InTx(conn =>
+        {
+            conn.Table<CardInDeck>().Delete(x => x.RunId == runId);
+            if (list.Count > 0) conn.InsertAll(list);
+        });
+    }
+
+    public void ReplaceRelics(string runId, System.Collections.Generic.IEnumerable<RelicInPossession> relics)
+    {
+        if (string.IsNullOrEmpty(runId)) return;
+        var list = relics?.ToList() ?? new System.Collections.Generic.List<RelicInPossession>();
+        InTx(conn =>
+        {
+            conn.Table<RelicInPossession>().Delete(x => x.RunId == runId);
+            if (list.Count > 0) conn.InsertAll(list);
+        });
+    }
+
+    public void ReplacePotions(string runId, System.Collections.Generic.IEnumerable<PotionInPossession> potions)
+    {
+        if (string.IsNullOrEmpty(runId)) return;
+        var list = potions?.ToList() ?? new System.Collections.Generic.List<PotionInPossession>();
+        InTx(conn =>
+        {
+            conn.Table<PotionInPossession>().Delete(x => x.RunId == runId);
+            if (list.Count > 0) conn.InsertAll(list);
+        });
+    }
+
     // --- 활성 이벤트 세션: RunId 1-row 저장소 ---
     public void UpsertActiveEventSession(string runId, string json)
     {
@@ -414,7 +457,92 @@ public sealed class DatabaseManager
         if (string.IsNullOrEmpty(runId)) return;
         _conn.Table<ActiveEventSession>().Delete(x => x.RunId == runId);
     }
+
+    // --- RNG 상태 저장/로드 ---
+    public System.Collections.Generic.List<RngState> LoadRngStates(string runId)
+    {
+        if (string.IsNullOrEmpty(runId)) return new System.Collections.Generic.List<RngState>();
+        return _conn.Table<RngState>().Where(r => r.RunId == runId).ToList();
+    }
+
+    public void UpsertRngStates(string runId, System.Collections.Generic.IEnumerable<RngState> states)
+    {
+        if (string.IsNullOrEmpty(runId)) return;
+
+        InTx(conn =>
+        {
+            conn.Table<RngState>().Delete(r => r.RunId == runId);
+            if (states != null)
+            {
+                foreach (var s in states)
+                {
+                    if (s == null) continue;
+                    s.RunId = runId; // 상위에서 비워져 내려오는 경우 보정
+                    conn.Insert(s);
+                }
+            }
+        });
+    }
     
+    // ==== CardRuntimeState 관리 API ====
+    public void UpsertCardRuntimeStates(string runId, System.Collections.Generic.IEnumerable<CardRuntimeState> cards)
+    {
+        if (string.IsNullOrEmpty(runId)) return;
+
+        var list = cards as System.Collections.Generic.IList<CardRuntimeState> ?? cards?.ToList();
+        if (list == null)
+        {
+            // null 입력은 실수로 간주하고 아무 작업도 하지 않음(보호)
+            return;
+        }
+
+        InTx(conn =>
+        {
+            // 기존 상태 전부 삭제(스냅샷 교체)
+            conn.Table<CardRuntimeState>().Delete(c => c.RunId == runId);
+
+            if (list.Count == 0)
+            {
+                // 의도된 전체 삭제
+                return;
+            }
+
+            foreach (var card in list)
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                if (card == null)
+                    throw new System.InvalidOperationException("UpsertCardRuntimeStates: null card detected in input list.");
+                if (string.IsNullOrEmpty(card.InstanceId))
+                    throw new System.InvalidOperationException("UpsertCardRuntimeStates: InstanceId is empty.");
+                if (string.IsNullOrEmpty(card.CardId))
+                    throw new System.InvalidOperationException($"UpsertCardRuntimeStates: CardId is empty for {card.InstanceId}.");
+#endif
+                card.RunId = runId;
+                card.ModifiersJson = card.ModifiersJson ?? string.Empty;
+            }
+
+            conn.InsertAll(list);
+        });
+    }
+
+    public System.Collections.Generic.List<CardRuntimeState> LoadCardRuntimeStates(string runId)
+    {
+        if (string.IsNullOrEmpty(runId)) return new System.Collections.Generic.List<CardRuntimeState>();
+        return _conn.Table<CardRuntimeState>()
+            .Where(c => c.RunId == runId)
+            .OrderByDescending(c => c.OrderInPile)
+            .ToList();
+    }
+
+    public System.Collections.Generic.List<CardRuntimeState> LoadCardRuntimeStates(string runId, CardLocation location)
+    {
+        if (string.IsNullOrEmpty(runId)) return new System.Collections.Generic.List<CardRuntimeState>();
+        return _conn.Table<CardRuntimeState>()
+            .Where(c => c.RunId == runId && c.Location == location)
+            .OrderByDescending(c => c.OrderInPile)
+            .ToList();
+    }
+
 
     public void Close()
     {

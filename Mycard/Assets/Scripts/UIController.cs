@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
 public class UIController : MonoBehaviour
@@ -82,8 +82,7 @@ public class UIController : MonoBehaviour
 
     public void DrawCard()
     {
-        DeckController.instance.DrawCardForMana();
-
+        BattleController.instance.AttemptPlayerDraw();
         AudioManager.instance.PlaySFX(0);
     }
 
@@ -98,16 +97,16 @@ public class UIController : MonoBehaviour
 
     public void AddBanana()
     {
-        GameObject bananaObject = new GameObject("BananaItem"); //¾ÆÀÌÅÛ ¿ÀºêÁ§Æ®¸¦ »õ·Î ¸¸µé¾îÁİ´Ï´Ù
-        Banana bananaItem = bananaObject.AddComponent<Banana>(); //¾ÆÀÌÅÛ ½ºÅ©¸³Æ®¸¦ ºÒ·¯¿Í¿ä
+        GameObject bananaObject = new GameObject("BananaItem"); //ì•„ì´í…œ ì˜¤ë¸Œì íŠ¸ë¥¼ ìƒˆë¡œ ë§Œë“¤ì–´ì¤ë‹ˆë‹¤
+        Banana bananaItem = bananaObject.AddComponent<Banana>(); //ì•„ì´í…œ ìŠ¤í¬ë¦½íŠ¸ë¥¼ ë¶ˆëŸ¬ì™€ìš”
         Inventory.Instance.AddItem(bananaItem);
         bananaItem.OnAddItem();
     }
 
     public void AddSword()
     {
-        GameObject SwordObject = new GameObject("SwordItem"); //¾ÆÀÌÅÛ ¿ÀºêÁ§Æ®¸¦ »õ·Î ¸¸µé¾îÁİ´Ï´Ù
-        Sword SwordItem = SwordObject.AddComponent<Sword>(); //¾ÆÀÌÅÛ ½ºÅ©¸³Æ®¸¦ ºÒ·¯¿Í¿ä
+        GameObject SwordObject = new GameObject("SwordItem"); //ì•„ì´í…œ ì˜¤ë¸Œì íŠ¸ë¥¼ ìƒˆë¡œ ë§Œë“¤ì–´ì¤ë‹ˆë‹¤
+        Sword SwordItem = SwordObject.AddComponent<Sword>(); //ì•„ì´í…œ ìŠ¤í¬ë¦½íŠ¸ë¥¼ ë¶ˆëŸ¬ì™€ìš”
         Inventory.Instance.AddItem(SwordItem);
         SwordItem.OnAddItem();
     }
@@ -151,26 +150,26 @@ public class UIController : MonoBehaviour
 
     public void ChAdd()
     {
-        // 1) Resources/Characters Æú´õ ¾ÈÀÇ "Cat.asset" ÆÄÀÏ ºÒ·¯¿À±â
+        // 1) Resources/Characters í´ë” ì•ˆì˜ "Cat.asset" íŒŒì¼ ë¶ˆëŸ¬ì˜¤ê¸°
         CharacterSO newChar = Resources.Load<CharacterSO>("Characters/Cat");
 
         if (newChar != null)
         {
-            // 2) PortraitInventory¿¡ Ä³¸¯ÅÍ Ãß°¡
+            // 2) PortraitInventoryì— ìºë¦­í„° ì¶”ê°€
             PortraitInventory.instance.AddCharacter(newChar);
 
-            Debug.Log(newChar.characterName + " Ãß°¡µÊ!");
+            Debug.Log(newChar.characterName + " ì¶”ê°€ë¨!");
         }
         else
         {
-            Debug.LogError("Ä³¸¯ÅÍ ScriptableObject¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù!");
+            Debug.LogError("ìºë¦­í„° ScriptableObjectë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!");
         }
     }
 
     public void CardAdd1()
     {
-        DeckController.instance.AddCardToDeckById("Knight", 1);
-        //DeckController.instance.SaveDeck();
+        // ë ˆê±°ì‹œ DeckController ê²½ë¡œ ì œê±°: ì´ ê¸°ëŠ¥ì€ ì‹ ê·œ ë±/ë³´ìƒ ì‹œìŠ¤í…œìœ¼ë¡œ ëŒ€ì²´ë˜ì–´ì•¼ í•©ë‹ˆë‹¤.
+        Debug.LogWarning("[UIController] CardAdd1ì€ ë ˆê±°ì‹œì…ë‹ˆë‹¤. ë± ì¶”ê°€ëŠ” ë³´ìƒ/ìƒì /ë™ë£Œ ì„ íƒ ë¡œì§ì„ í†µí•´ ì²˜ë¦¬í•˜ì„¸ìš”.");
     }
     
     public void AddRelic()

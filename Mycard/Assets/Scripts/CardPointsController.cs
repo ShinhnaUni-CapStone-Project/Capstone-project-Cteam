@@ -1,8 +1,8 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
 
 public class CardPointsController : MonoBehaviour
-{   //Ä«µåÀÇ ÅÏµ¿¾ÈÀÇ Çàµ¿À» ´ã´çÇÏ´Â ½ºÅ©¸³Æ®ÀÔ´Ï´Ù
+{   //ì¹´ë“œì˜ í„´ë™ì•ˆì˜ í–‰ë™ì„ ë‹´ë‹¹í•˜ëŠ” ìŠ¤í¬ë¦½íŠ¸ì…ë‹ˆë‹¤
 
     public static CardPointsController instance;
 
@@ -36,35 +36,27 @@ public class CardPointsController : MonoBehaviour
 
     IEnumerator PlayerAttackCo()
     {
-
         
         yield return new WaitForSeconds(timeBetweenAttacks);
 
         for (int i = 0; i < playerCardPoints.Length; i++)
-        {   // Ãß°¡ +++ °ø°İ·Â ¼öÁ¤ Ã¼ÀÎ Àû¿ë
-            var playerCard = (i < playerCardPoints.Length && playerCardPoints[i] != null)
-                ? playerCardPoints[i].activeCard : null;
-            int baseAtk = playerCard?.attackPower ?? 0;
-            int finalAtk = GameEvents.ModifyPlayerAttack?.Invoke(baseAtk) ?? baseAtk;
-            // Ãß°¡ +++ °ø°İ·Â ¼öÁ¤ Ã¼ÀÎ Àû¿ë
-            if (playerCardPoints[i].activeCard != null) //1¹ø Ä­¿¡ ÀÖÀ»¶§
+        {
+            if (playerCardPoints[i].activeCard != null) //1ë²ˆ ì¹¸ì— ìˆì„ë•Œ
              {
-
-                if (enemyCardPoints[i].activeCard != null) //ÀûÄ«µåÆ÷ÀÎÆ®µµ 1¹øÄ­¿¡ ÀÖÀ»¶§
+                if (enemyCardPoints[i].activeCard != null) //ì ì¹´ë“œí¬ì¸íŠ¸ë„ 1ë²ˆì¹¸ì— ìˆì„ë•Œ
                 {
-                    //ÀûÄ«µå°ø°İ
-                    //enemyCardPoints[i].activeCard.DamageCard(playerCardPoints[i].activeCard.attackPower); //±âÁ¸
-                    enemyCardPoints[i].activeCard.DamageCard(finalAtk);//finalAtkÀ¯¹°·Î Ãß°¡µÇ¸é °ø°İ·Â Ãß°¡
+                    //ì ì¹´ë“œê³µê²©
+                    enemyCardPoints[i].activeCard.DamageCard(playerCardPoints[i].activeCard.attackPower);
 
+                   
                 }
                 else
                 {
-                    //BattleController.instance.DamageEnemy(playerCardPoints[i].activeCard.attackPower); //Ä«µå°¡ ¾ø´Ù¸é Á÷Á¢°ø°İ ±âÁ¸
-                    //ÀûÄ«µåÀüÃ¼Ã¼·Â
-                    BattleController.instance.DamageEnemy(finalAtk);//finalAtkÀ¯¹°·Î Ãß°¡µÇ¸é °ø°İ·Â Ãß°¡
+                    BattleController.instance.DamageEnemy(playerCardPoints[i].activeCard.attackPower); //ì¹´ë“œê°€ ì—†ë‹¤ë©´ ì§ì ‘ê³µê²©
+                    //ì ì¹´ë“œì „ì²´ì²´ë ¥
                 }
 
-                playerCardPoints[i].activeCard.anim.SetTrigger("Attack");//AttackºÒ·¯¿À±â
+                playerCardPoints[i].activeCard.anim.SetTrigger("Attack");//Attackë¶ˆëŸ¬ì˜¤ê¸°
 
                
                 yield return new WaitForSeconds(timeBetweenAttacks);
@@ -105,18 +97,18 @@ public class CardPointsController : MonoBehaviour
             {
                 if (playerCardPoints[i].activeCard != null)
                 {
-                    //ÇÃ·¹ÀÌ¾îÄ«µå°ø°İ
+                    //í”Œë ˆì´ì–´ì¹´ë“œê³µê²©
                     playerCardPoints[i].activeCard.DamageCard(enemyCardPoints[i].activeCard.attackPower);
 
                     
                 }
                 else
                 {
-                    //ÇÃ·¹ÀÌ¾îÀüÃ¼Ã¼·Â
+                    //í”Œë ˆì´ì–´ì „ì²´ì²´ë ¥
                     BattleController.instance.DamagePlayer(enemyCardPoints[i].activeCard.attackPower);
                 }
 
-                enemyCardPoints[i].activeCard.anim.SetTrigger("Attack");//AttackºÒ·¯¿À±â
+                enemyCardPoints[i].activeCard.anim.SetTrigger("Attack");//Attackë¶ˆëŸ¬ì˜¤ê¸°
 
                 
 
@@ -131,7 +123,6 @@ public class CardPointsController : MonoBehaviour
 
         CheckAssignedCards();
 
-        GameEvents.OnTurnEnd?.Invoke(false);  // Ãß°¡ +++ Àû ÅÏ Á¾·á
         BattleController.instance.AdvanceTurn();
     }
 

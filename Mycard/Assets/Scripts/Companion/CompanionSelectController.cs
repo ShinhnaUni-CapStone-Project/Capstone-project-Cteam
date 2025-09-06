@@ -80,9 +80,10 @@ public class CompanionSelectController : MonoBehaviour
 
         var cards = new List<CardInDeck>();
         // 기본 덱
-        cards.Add(new CardInDeck { InstanceId = NewId(), RunId = runId, CardId = "CARD_STRIKE", IsUpgraded = false });
-        cards.Add(new CardInDeck { InstanceId = NewId(), RunId = runId, CardId = "CARD_STRIKE", IsUpgraded = false });
-        cards.Add(new CardInDeck { InstanceId = NewId(), RunId = runId, CardId = "CARD_DEFEND", IsUpgraded = false });
+        cards.Add(new CardInDeck { InstanceId = NewId(), RunId = runId, CardId = "CARD_2", IsUpgraded = false });
+        cards.Add(new CardInDeck { InstanceId = NewId(), RunId = runId, CardId = "CARD_3", IsUpgraded = false });
+        cards.Add(new CardInDeck { InstanceId = NewId(), RunId = runId, CardId = "CARD_4", IsUpgraded = false });
+        cards.Add(new CardInDeck { InstanceId = NewId(), RunId = runId, CardId = "CARD_5", IsUpgraded = false });
         // 동료 전용 카드
         foreach (var cid in _selected.StartingCardIds)
             cards.Add(new CardInDeck { InstanceId = NewId(), RunId = runId, CardId = cid, IsUpgraded = false });
@@ -97,12 +98,18 @@ public class CompanionSelectController : MonoBehaviour
             .Select(id => new PotionInPossession { RunId = runId, PotionId = id, Charges = 1 })
             .ToList();
 
-        // 3. 완성된 '첫 번째 세이브 파일'을 DB에 저장합니다.
-        DatabaseManager.Instance.SaveCurrentRun(run, cards, relics, potions,
-            nodes: new List<MapNodeState>(), rngStates: new List<RngState>());
+        // 3. 완성된 '첫 번째 세이브 파일'을 DB에 저장합니다. (세분화된 API 사용)
+        var db = ServiceRegistry.GetRequired<IDatabase>();
+        db.UpsertCurrentRun(run);
+        db.ReplaceCardsInDeck(runId, cards);
+        db.ReplaceRelics(runId, relics);
+        db.ReplacePotions(runId, potions);
 
         // 3.5. 월렛을 새로운 런에 재바인딩하여 UI와 동기화합니다.
         ServiceRegistry.Get<IWalletService>()?.RebindRun(runId);
+
+        // 3.6. 덱 서비스에 신규 런을 로드/준비시켜 캐시 및 RNG 동기화
+        ServiceRegistry.Get<IDeckService>()?.LoadAndPrepareDeck(runId);
 
         // 4. 맵 씬으로 이동합니다.
         SceneManager.LoadScene(mapScene);
@@ -157,20 +164,18 @@ public class CompanionSelectController : MonoBehaviour
             .Select(id => new PotionInPossession { RunId = runId, PotionId = id, Charges = 1 })
             .ToList();
 
-        // 맵/이벤트/RNG 초기값은 빈 리스트로 시작
-        DatabaseManager.Instance.SaveCurrentRun(
-            run,
-            deck.ToCardRowsForSave(),
-            relicRows,
-            potRows,
-            nodes: new System.Collections.Generic.List<MapNodeState>(),
-            rngStates: new System.Collections.Generic.List<RngState>()
-        );
+        // 맵/이벤트/RNG 초기값은 빈 리스트로 시작 (세분화된 API 사용)
+        var db = ServiceRegistry.GetRequired<IDatabase>();
+        db.UpsertCurrentRun(run);
+        db.ReplaceCardsInDeck(runId, deck.ToCardRowsForSave());
+        db.ReplaceRelics(runId, relicRows);
+        db.ReplacePotions(runId, potRows);
 
         PlayerPrefs.SetString("lastRunId", runId);
         PlayerPrefs.Save();
 
-        // 월렛 재바인딩 (안전)
+        // 월렛 재바인딩 + 덱 서비스 로드 (안전)
         ServiceRegistry.Get<IWalletService>()?.RebindRun(runId);
+        ServiceRegistry.Get<IDeckService>()?.LoadAndPrepareDeck(runId);
     }
 }

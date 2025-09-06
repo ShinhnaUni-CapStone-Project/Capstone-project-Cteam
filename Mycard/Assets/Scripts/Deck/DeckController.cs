@@ -13,9 +13,15 @@ public class DeckSaveData
     public List<string> ids = new List<string>(); // deckToUse를 Id 배열로 저장
 }
 
+[Obsolete("DeckController는 레거시입니다. IDeckService를 사용하세요.", true)]
 public class DeckController : MonoBehaviour
 {
     public static DeckController instance;
+
+    // --- 서비스 참조 (Phase 2: 주입 예정) ---
+    private IDeckService _deckService;
+    private ICardCatalog _cardCatalog;
+    private bool _isInitialized = false;
 
     private void Awake()
     {
@@ -110,6 +116,23 @@ public class DeckController : MonoBehaviour
             interations++; //증가
         }
     }
+
+    /// <summary>
+    /// BattleSceneBootstrap에서 호출해 서비스를 주입합니다. 이 메서드가 호출되기 전에는 동작하지 않아야 합니다.
+    /// </summary>
+    public void Initialize(IDeckService deckService, ICardCatalog cardCatalog)
+    {
+        _deckService = deckService ?? throw new ArgumentNullException(nameof(deckService));
+        _cardCatalog = cardCatalog ?? throw new ArgumentNullException(nameof(cardCatalog));
+        _isInitialized = true;
+        // 이벤트 구독은 후속 단계에서 OnEnable/OnDisable 등으로 이전
+    }
+
+    private void RequireInitialization()
+    {
+        if (!_isInitialized)
+            throw new InvalidOperationException("DeckController가 초기화되지 않았습니다. BattleSceneBootstrap에서 Initialize()를 호출해야 합니다.");
+    }
     public void RebuildDrawPile(bool shuffle = true) //카드 추가시 재구성
     {
         if (shuffle)
@@ -124,8 +147,12 @@ public class DeckController : MonoBehaviour
     }
 
 
+    [Obsolete("카드 드로우는 IDeckService.DrawCards()를 사용하세요.", false)]
     public void DrawCardToHand()
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.LogWarning($"[DEPRECATED] DeckController.DrawCardToHand() 레거시 경로 호출. 서비스 전환 전 임시로 동작합니다. Stack: {Environment.StackTrace}");
+#endif
         if (activeCards.Count == 0)
         {
             SetupDeck();
@@ -141,8 +168,12 @@ public class DeckController : MonoBehaviour
         AudioManager.instance.PlaySFX(3); //sfx3
     }
 
+    [Obsolete("카드 드로우는 IDeckService.DrawCards()를 사용하세요.", false)]
     public void DrawCardForMana() //드로우 카드의 코스트 기제
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.LogWarning($"[DEPRECATED] DeckController.DrawCardForMana() 레거시 경로 호출. 서비스 전환 전 임시로 동작합니다. Stack: {Environment.StackTrace}");
+#endif
         if (BattleController.instance.playerMana >= drawCardCost)
         {
             DrawCardToHand();
@@ -155,11 +186,16 @@ public class DeckController : MonoBehaviour
             UIController.instance.drawCardButton.SetActive(false);
         }
     }
+    [Obsolete("카드 드로우는 IDeckService.DrawCards()를 사용하세요.", false)]
     public void DrawMulitpleCards(int amountToDraw)
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.LogWarning($"[DEPRECATED] DeckController.DrawMulitpleCards({amountToDraw}) 레거시 경로 호출. 서비스 전환 전 임시로 동작합니다. Stack: {Environment.StackTrace}");
+#endif
        StartCoroutine(DrawMultipleCo(amountToDraw));
     }
 
+    [Obsolete("레거시 코루틴은 사용하지 않습니다.", false)]
     IEnumerator DrawMultipleCo(int amountToDraw)
     {
         for (int i = 0; i < amountToDraw; i++)
@@ -257,8 +293,12 @@ public class DeckController : MonoBehaviour
         NotifyChanged();
         if (rebuildDrawPile) RebuildDrawPile(true);
     }
+    [Obsolete("셔플은 IDeckService가 자동으로 처리합니다.", false)]
     public void ShuffleDeckToUse()
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.LogWarning($"[DEPRECATED] DeckController.ShuffleDeckToUse() 레거시 경로 호출. 서비스 전환 전 임시로 동작합니다. Stack: {Environment.StackTrace}");
+#endif
         // 덱 자체를 섞고 싶을 때
         System.Random RandomDeck = new System.Random();
         for (int i = deckToUse.Count - 1; i > 0; i--)
@@ -275,52 +315,21 @@ public class DeckController : MonoBehaviour
         foreach (var x in deckToUse) if (x == so) c++;
         return c;
     }
+    [Obsolete("덱 저장은 IDeckService/DB가 자동으로 처리합니다.", false)]
     public void SaveDeck()
     {
-        var data = new DeckSaveData(); //DeckSaveData()로 Id배열 저장
-        foreach (var so in deckToUse)
-        {
-            if (so == null) continue;
-            if (string.IsNullOrEmpty(so.CardId))
-            {
-                Debug.LogWarning($"[DeckController1] 저장 스킵: Id가 비어있는 카드: {so.name}");
-                continue;
-            }
-            data.ids.Add(so.CardId);
-        }
-        // file save
-        string Decklist = JsonUtility.ToJson(data); //Json직렬화 유저 데이터 저장
-
-        //File.WriteAllText(Application.dataPath + "/DeckData.json", JsonUtility.ToJson(data)); //이 코드를 쓰면 DeckData.json이 저장된다 Application.dataPath는 작업폴더
-        PlayerPrefs.SetString(PlayerPrefsKey, Decklist); //PlayerPrefs는 간단한 데이터를 로컬로 저장할때 쓰인다 PlayerPrefs를 문자형태로 변경 
-        //49번 줄의 deck_1을  뜻함 PlayerPrefs은 <Key Value>로 데이터를 저장하는 클래스이다. Key값은 string이며, Key는 Value를 찾기 위한 식별자를 의미한다.
-        PlayerPrefs.Save(); //수정된 모든 preferences를 파일에 저장한다.
-        Debug.Log($"[DeckController1] 덱 저장 완료. 카드 수: {data.ids.Count}");
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.LogWarning($"[DEPRECATED] DeckController.SaveDeck() 호출은 무시됩니다. Stack: {Environment.StackTrace}");
+#endif
     }
+    [Obsolete("덱 로드는 IDeckService.LoadAndPrepareDeck()으로 대체되었습니다.", false)]
     public bool LoadDeck(bool rebuildDrawPile = true)
     {
-        if (!PlayerPrefs.HasKey(PlayerPrefsKey)) return false; //PlayerPrefs가 Key가 존재하는지 확인한다.
-        // file load 
-        string Decklist = PlayerPrefs.GetString(PlayerPrefsKey);
-        var data = JsonUtility.FromJson<DeckSaveData>(Decklist);
-        if (data == null || data.ids == null) return false; //데이터와 데이터 id가 없다면 실패
-
-        deckToUse.Clear();
-        foreach (var id in data.ids)
-        {
-            if (dbById.TryGetValue(id, out var so))
-            {
-                deckToUse.Add(so);
-            }
-            else
-            {
-                Debug.LogWarning($"[DeckController1] 로드 실패: 알 수 없는 Id {id}");
-            }
-        }
-        NotifyChanged();
-        if (rebuildDrawPile) RebuildDrawPile(true);
-        Debug.Log($"[DeckController1] 덱 로드 완료. 카드 수: {deckToUse.Count}");
-        return true;
+        // 레거시 호출 차단
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.LogWarning($"[DEPRECATED] DeckController.LoadDeck() 호출은 무시됩니다. Stack: {Environment.StackTrace}");
+#endif
+        return false;
     }
 
     private void BuildIndex()
@@ -358,12 +367,7 @@ public class DeckController : MonoBehaviour
 
 }
 
-//DeckController.instance.AddCardToDeckById("1", 1);//id 문자열임 id로 호출해서 갯수만큼추가
-//DeckController.Instance.RemoveCardById("1", 1); //id문자열로 id로 호출해서 갯수만큼 삭제
-//DeckController.Instance.SaveDeck();//저장
-//DeckController.Instance.LoadDeck();//불러오기
-//DeckController.Instance.Shuffle();
-//DeckController.Instance.AddCard(fireballSO, 2);// 비추천 so명칭으로 불러오기
+// (레거시 예제 코드 제거됨)
 
 //
 /* 원본
